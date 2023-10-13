@@ -1,3 +1,4 @@
+import math
 from general_physics import envs
 
 def get_revolution_time(semi_major_axis:int) ->float:
