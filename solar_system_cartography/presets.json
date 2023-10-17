@@ -1,13 +1,11 @@
 {
     "mercury" : {
         "semi_major_axis" : 0.38709808989279954,
-        "semi_minor_axis" : 0.3788281697125761,
         "inclination" : 7.004,
         "eccentricity" : 0.2056
     },
     "1P/Halley" : {
         "semi_major_axis" : 17.9,
-        "semi_minor_axis" : 4.542113875533178,
         "inclination" : 162.238,
         "eccentricity" : 0.96727
     }

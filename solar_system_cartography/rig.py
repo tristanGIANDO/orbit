@@ -1,5 +1,19 @@
 from maya import cmds
-from solar_system_cartography import envs
+from solar_system_cartography import api
+
+def convert_inclination(inclination:float) ->float:
+    """Converts the inclination of an orbit in maya units.
+
+    Args:
+        inclination (float): orbit inclination
+
+    Returns:
+        float: The converted inclination
+    """
+    if inclination > 90:
+        inclination = -(180 - inclination)
+    
+    return inclination
 
 def convert_eccentricity(eccentricity:float) ->float:
     """In Maya, eccentricity is the center of a Nurbscurve. Attribute is r*2
@@ -59,10 +73,10 @@ def create_orbit(name, semi_major_axis:float,
     cmds.setAttr(f"{orbit}.scaleX", semi_major_axis)
     cmds.setAttr(f"{orbit}.scaleZ", semi_minor_axis)
     # set inclination
-    cmds.setAttr(f"{orbit}.rotateZ", inclination)
+    cmds.setAttr(f"{orbit}.rotateZ", convert_inclination(inclination))
     # set eccentricity
-    construction_node = cmds.listHistory(orbit)[-1]
-    cmds.setAttr(f"{construction_node}.centerX", eccentricity)
+    orbit_node = cmds.listHistory(orbit)[-1]
+    cmds.setAttr(f"{orbit_node}.centerX", convert_eccentricity(eccentricity))
 
     return orbit
 
@@ -70,7 +84,7 @@ if __name__ == "__main__":
     create_orbit(
         name="1P/Halley",
         semi_major_axis=17.9,
-        semi_minor_axis=4.542113875533178,
+        semi_minor_axis=api.get_semi_minor_axis(17.9),
         inclination=162.238,
-        eccentricity=convert_eccentricity(0.96727)
+        eccentricity=0.96727
     )
