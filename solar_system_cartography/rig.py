@@ -1,12 +1,16 @@
 from maya import cmds
-from solar_system_cartography import api
+from solar_system_cartography import envs
 
-MAYA_AU = 0.000000001
+def convert_eccentricity(eccentricity:float) ->float:
+    """In Maya, eccentricity is the center of a Nurbscurve. Attribute is r*2
 
-def convert_meters_to_maya_au(meters:int) ->float:
-    if not meters:
-        raise
-    return meters * MAYA_AU
+    Args:
+        eccentricity (float): the eccentricity in degrees
+
+    Returns:
+        float: the converted eccentricity
+    """
+    return eccentricity / 2
 
 def constrain_planet_to_orbit(planet_name:str, revolution_time:int):
     offset = cmds.group(n=f"{planet_name}_offset", em=True)
@@ -29,6 +33,18 @@ def constrain_planet_to_orbit(planet_name:str, revolution_time:int):
 def create_orbit(name, semi_major_axis:float,
                  semi_minor_axis:float, inclination:float,
                  eccentricity:float) ->str:
+    """Creates the orbit of the object
+
+    Args:
+        name (str): The object name
+        semi_major_axis (float): Orbit semi major axis
+        semi_minor_axis (float): Orbit semi minor axis
+        inclination (float): Orbit inclination
+        eccentricity (float): Orbit eccentricity
+
+    Returns:
+        str: The created orbit DAG node
+    """
     # create circle
     orbit = cmds.circle(nr=(0, 1, 0),
                         c=(0, 0, 0),
@@ -43,7 +59,7 @@ def create_orbit(name, semi_major_axis:float,
     cmds.setAttr(f"{orbit}.scaleX", semi_major_axis)
     cmds.setAttr(f"{orbit}.scaleZ", semi_minor_axis)
     # set inclination
-    cmds.setAttr(f"{orbit}.rotateX", inclination)
+    cmds.setAttr(f"{orbit}.rotateZ", inclination)
     # set eccentricity
     construction_node = cmds.listHistory(orbit)[-1]
     cmds.setAttr(f"{construction_node}.centerX", eccentricity)
@@ -52,9 +68,9 @@ def create_orbit(name, semi_major_axis:float,
 
 if __name__ == "__main__":
     create_orbit(
-        name="mercury",
-        semi_major_axis=convert_meters_to_maya_au(57909050000),
-        semi_minor_axis=convert_meters_to_maya_au(56669796330),
-        inclination=7.004,
-        eccentricity=0.2056
+        name="1P/Halley",
+        semi_major_axis=17.9,
+        semi_minor_axis=4.542113875533178,
+        inclination=162.238,
+        eccentricity=convert_eccentricity(0.96727)
     )
