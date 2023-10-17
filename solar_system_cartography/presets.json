@@ -1,12 +1,26 @@
 {
-    "mercury" : {
+    "Mercury" : {
         "semi_major_axis" : 0.38709808989279954,
         "inclination" : 7.004,
         "eccentricity" : 0.2056
     },
+    "Neptune" : {
+        "semi_major_axis" : 30.0699,
+        "inclination" : 1.77,
+        "eccentricity" : 0.00859
+    },
+    "Pluto" : {
+        "semi_major_axis" : 39.4450697,
+        "inclination" : 17.0890009,
+        "eccentricity" : 0.25024871,
+        "perihelion" : 112.5971417,
+        "ascending_node" : 10.376956
+    },
     "1P/Halley" : {
         "semi_major_axis" : 17.9,
         "inclination" : 162.238,
-        "eccentricity" : 0.96727
+        "eccentricity" : 0.96727,
+        "perihelion" : 111.8,
+        "ascending_node" : 58.14536
     }
 }

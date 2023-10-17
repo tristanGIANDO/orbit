@@ -1,5 +1,4 @@
 from maya import cmds
-from solar_system_cartography import api
 
 def convert_inclination(inclination:float) ->float:
     """Converts the inclination of an orbit in maya units.
@@ -82,9 +81,9 @@ def create_orbit(name, semi_major_axis:float,
 
 if __name__ == "__main__":
     create_orbit(
-        name="1P/Halley",
-        semi_major_axis=17.9,
-        semi_minor_axis=api.get_semi_minor_axis(17.9),
-        inclination=162.238,
-        eccentricity=0.96727
+        name="Neptune",
+        semi_major_axis=30.0699,
+        semi_minor_axis=30.06879057914001,
+        inclination=1.77,
+        eccentricity=0.00859
     )
