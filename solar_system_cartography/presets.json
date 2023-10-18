@@ -4,6 +4,11 @@
         "inclination" : 7.004,
         "eccentricity" : 0.2056
     },
+    "Earth" : {
+        "semi_major_axis" : 1.0000001124,
+        "inclination" : 0,
+        "eccentricity" : 0.01671022
+    },
     "Neptune" : {
         "semi_major_axis" : 30.0699,
         "inclination" : 1.77,

@@ -1,4 +1,5 @@
 from maya import cmds
+import math
 
 def convert_inclination(inclination:float) ->float:
     """Converts the inclination of an orbit in maya units.
@@ -25,20 +26,24 @@ def convert_eccentricity(eccentricity:float) ->float:
     """
     return eccentricity / 2
 
-def constrain_planet_to_orbit(planet_name:str, revolution_time:int):
-    offset = cmds.group(n=f"{planet_name}_offset", em=True)
-    poc = cmds.createNode("pointOnCurveInfo", n=f"{planet_name}_POC")
-    loc = cmds.spaceLocator()
-    curve_attr = f"{planet_name}_ellipseShape.worldSpace[0]"
-    
-    cmds.parent(loc,offset)
-    cmds.matchTransform(loc,offset)
+def create_object(object_name:str) ->str:
+    return cmds.spaceLocator(n=f"{object_name}_offset")
+
+def attach_object_to_orbit(object_name:str, revolution_time:float):
+    obj = f"{object_name}_offset"
+    poc = cmds.createNode("pointOnCurveInfo", n=f"{object_name}_POC")
+    orbit = f"{object_name}_orbit"
+    curve_attr = f"{orbit}.worldSpace[0]"
+
+    points_distances = get_distances(orbit)
+    furthest_point = get_perihelion_point(points_distances)
+    closest_point = get_aphelion_point(points_distances)
     
     cmds.connectAttr(curve_attr, f"{poc}.inputCurve")
-    cmds.connectAttr(f"{poc}.position", f"{offset}.translate")
+    cmds.connectAttr(f"{poc}.position", f"{obj}.translate")
     
     cmds.setKeyframe(f"{poc}.pr", v=0, t=0)
-    cmds.setKeyframe(f"{poc}.pr", v=8, t=revolution_time)
+    cmds.setKeyframe(f"{poc}.pr", v=100, t=revolution_time)
     
     cmds.keyTangent(poc, itt="linear", ott="linear")
     cmds.setInfinity(poc, poi="cycle")
@@ -78,6 +83,32 @@ def create_orbit(name, semi_major_axis:float,
     cmds.setAttr(f"{orbit_node}.centerX", convert_eccentricity(eccentricity))
 
     return orbit
+
+def get_distances(orbit:str) ->dict:
+    barycenter_pos = [0.0, 0.0, 0.0]
+    positions = {}
+    if cmds.objExists(orbit):
+        for cv in cmds.ls(orbit + '.cv[*]', fl=True):
+            cv_index = int(cv.split("[")[-1].split("]")[0])
+            cv_pos = cmds.pointPosition(cv)
+            distance = math.sqrt((cv_pos[0] - barycenter_pos[0]) ** 2 + (cv_pos[1] - barycenter_pos[1]) ** 2 + (cv_pos[2] - barycenter_pos[2]) ** 2)
+            positions[cv_index] = distance
+
+    return positions
+
+def get_perihelion_point(positions:dict) ->str:
+    max_distance = max(d for d in list(positions.values()))
+
+    for i,d in positions.items():
+        if d == max_distance:
+            return i
+        
+def get_aphelion_point(positions:dict) ->str:
+    min_distance = min(d for d in list(positions.values()))
+
+    for i,d in positions.items():
+        if d == min_distance:
+            return i
 
 if __name__ == "__main__":
     create_orbit(

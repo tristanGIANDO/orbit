@@ -1,20 +1,16 @@
 import math
-import numpy as np
 
-# Paramètres orbitaux
-longitude_noeud_ascendant_deg = 58.14536  # Longitude du nœud ascendant en degrés
-inclinaison_deg = 162.238  # Inclinaison de l'orbite en degrés
+# Constantes
+G = 6.67430e-11  # m^3/kg/s^2
+M_soleil = 1.989e30  # kg
+a = 1.496e11  # m (demi-grand axe de l'orbite terrestre)
+e = 0.0167  # Excentricité de l'orbite terrestre
+M_terre = 5.972e24  # Masse de la Terre en kilogrammes
 
-# Convertir les angles en radians
-longitude_noeud_ascendant_rad = math.radians(longitude_noeud_ascendant_deg)
-inclinaison_rad = math.radians(inclinaison_deg)
+# Calcul de la distance au Soleil au périhélie
+r_min = a * (1 - e)
 
-# Calcul de la direction du demi-grand axe dans le repère XYZ
-a = np.array([
-    math.cos(longitude_noeud_ascendant_rad) * math.cos(inclinaison_rad),
-    math.sin(longitude_noeud_ascendant_rad) * math.cos(inclinaison_rad),
-    math.sin(inclinaison_rad)
-])
+# Calcul de la vitesse maximale de la Terre (au périhélie)
+v_max_terre = math.sqrt(G * (M_soleil + M_terre) * (2 / r_min - 1 / a))
 
-print("Direction du demi-grand axe dans le repère XYZ :")
-print(a)
+print("La vitesse maximale de la Terre au périhélie est d'environ", v_max_terre, "m/s")
