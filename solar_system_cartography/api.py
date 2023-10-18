@@ -2,73 +2,89 @@ import math
 
 from solar_system_cartography import envs
 
-def convert_meters_to_au(meters:int) ->float:
-    """Converts a distance in meters to astronomical unit
+class ObjectInOrbit():
+    def __init__(self, object_name:str, semi_major_axis:float, inclination:float, eccentricity:float) -> None:
+        self._name = object_name
+        self._semi_major_axis = semi_major_axis
+        self._inclination = inclination
+        self._eccentricity = eccentricity
+        self._attraction_mass = envs.SOLAR_MASS # to modify if other center of gravity
 
-    Args:
-        meters (int): Meters
-
-    Returns:
-        float: The same distance but in astronomical unit
-    """
-    if not meters:
-        raise
-    return meters / envs.AU
-
-def convert_au_to_meters(au:float) ->float:
-    """Converts a distance in astronomical unit to meters
-
-    Args:
-        au (float): astronomical unit distance
-
-    Returns:
-        float: The same distance but in astronomical unit
-    """
-    if not au:
-        raise
-    return au * envs.AU
-
-def get_revolution_time(semi_major_axis:int) ->float:
-    """
-    Calculate the time in days that it takes for a star to make a complete revolution around the Sun from its distance from the Sun.
-    semi_major_axis : The semi-major axis of the ellipse formed by the star around the Sun
-    """
-    # Using Kepler's law to calculate the orbital period (T)
-    orbital_period = 2 * math.pi * math.sqrt((semi_major_axis**3) / (envs.GRAVITATIONAL_CONSTANT * envs.SOLAR_MASS))
+    def __repr__(self) -> str:
+        return f"{__class__.__name__} : {self._name}"
     
-    # Conversion to days
-    orbital_period_days = orbital_period / (60 * 60 * 24)
+    def get_name(self) ->str:
+        return self._name
     
-    return orbital_period_days
+    def get_semi_major_axis(self) ->float:
+        return self._semi_major_axis
+    
+    def get_inclination(self) ->float:
+        return self._inclination
+    
+    def get_eccentricity(self) ->float:
+        return self._eccentricity
+    
+    def get_revolution_time(self) ->float:
+        """
+        Calculates the time in days that it takes for a star to make a
+        complete revolution around the Sun from its distance from the Sun.
+        """
+        # Using Kepler's law to calculate the orbital period (T)
+        orbital_period = 2 * math.pi * math.sqrt((self._semi_major_axis**3) / (envs.G * self._attraction_mass))
+        
+        # Conversion to days
+        return orbital_period / (60 * 60 * 24)
 
-def get_semi_minor_axis(semi_major_axis:float, eccentricity:float) ->float:
-    """Calculates the semi minor axis of an ellipse.
+    def get_semi_minor_axis(self) ->float:
+        """Calculates the semi minor axis of an ellipse.
 
-    Args:
-        semi_major_axis (float): semi major axis, unit does not matter
-        eccentricity (float): eccentricity in degrees converted to float
+        Returns:
+            float: The semi minor axis of the ellipse
+        """
+        return self._semi_major_axis * math.sqrt(1 - self._eccentricity ** 2)
 
-    Returns:
-        float: The semi minor axis of the ellipse
-    """
-    return semi_major_axis * math.sqrt(1 - eccentricity ** 2)
+    def get_perihelion_velocity(self) ->float:
+        """Calculate the speed of an object at perihelion around the Sun
 
-def get_perihelion():
-    inclinaison_degrees = 162.238  # Inclinaison de l'orbite en degrés
-    longitude_du_noeud_ascendant_degrees = 58  # Longitude du nœud ascendant en degrés
+        Returns:
+            float: The velocity in meters
+        """
+        return math.sqrt(envs.G * self._attraction_mass * (1 + self._eccentricity) / (self._semi_major_axis * (1 - self._eccentricity)))
 
-    # Conversion des angles en radians
-    inclinaison_radians = math.radians(inclinaison_degrees)
-    longitude_du_noeud_ascendant_radians = math.radians(longitude_du_noeud_ascendant_degrees)
+    def get_aphelion_velocity(self) ->float:
+        """Calculate the speed of an object at aphelion around the Sun
 
-    # Calcul de l'argument du périhélie (ω) en radians
-    argument_du_perihelie_radians = math.atan2(-math.cos(inclinaison_radians) * math.sin(longitude_du_noeud_ascendant_radians), math.cos(longitude_du_noeud_ascendant_radians))
-
-    # Conversion de l'angle résultant en degrés
-    argument_du_perihelie_degrees = math.degrees(argument_du_perihelie_radians)
-
-    return argument_du_perihelie_degrees
+        Returns:
+            float: The velocity in meters
+        """
+        return math.sqrt(envs.G * self._attraction_mass * (1 - self._eccentricity) / (self._semi_major_axis * (1 + self._eccentricity)))
 
 if __name__ == "__main__":
     # print(get_semi_minor_axis(30.0699, 0.00859))
-    print(get_revolution_time(convert_au_to_meters(0.38709808989279954)))
+    # print(get_revolution_time(convert_au_to_meters(0.38709808989279954)))
+
+    def get_perihelion():
+        inclinaison_degrees = 162.238  # Inclinaison de l'orbite en degrés
+        longitude_du_noeud_ascendant_degrees = 58  # Longitude du nœud ascendant en degrés
+
+        # Conversion des angles en radians
+        inclinaison_radians = math.radians(inclinaison_degrees)
+        longitude_du_noeud_ascendant_radians = math.radians(longitude_du_noeud_ascendant_degrees)
+
+        # Calcul de l'argument du périhélie (ω) en radians
+        argument_du_perihelie_radians = math.atan2(-math.cos(inclinaison_radians) * math.sin(longitude_du_noeud_ascendant_radians), math.cos(longitude_du_noeud_ascendant_radians))
+
+        # Conversion de l'angle résultant en degrés
+        argument_du_perihelie_degrees = math.degrees(argument_du_perihelie_radians)
+
+        return argument_du_perihelie_degrees
+    
+    object_name = "Mercury"
+    
+    data = envs.PRESETS.get(object_name)
+    object = ObjectInOrbit(object_name, data["semi_major_axis"], data["inclination"], data["eccentricity"])
+    print(object)
+    print(object.get_revolution_time())
+    print(object.get_aphelion_velocity())
+    print(object.get_semi_minor_axis())
