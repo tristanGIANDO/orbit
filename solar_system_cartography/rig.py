@@ -77,10 +77,10 @@ def create_orbit(name, semi_major_axis:float,
     cmds.setAttr(f"{orbit}.scaleX", semi_major_axis)
     cmds.setAttr(f"{orbit}.scaleZ", semi_minor_axis)
     # set inclination
-    cmds.setAttr(f"{orbit}.rotateZ", convert_inclination(inclination))
+    cmds.setAttr(f"{orbit}.rotateX", convert_inclination(inclination))
     # set eccentricity
     orbit_node = cmds.listHistory(orbit)[-1]
-    cmds.setAttr(f"{orbit_node}.centerX", convert_eccentricity(eccentricity))
+    cmds.setAttr(f"{orbit_node}.centerZ", convert_eccentricity(eccentricity))
 
     return orbit
 
@@ -109,6 +109,25 @@ def get_aphelion_point(positions:dict) ->str:
     for i,d in positions.items():
         if d == min_distance:
             return i
+        
+def move_along_orbit():
+    """
+    WORKFLOW
+    Dans Maya, je connais la world position du locator au périhélie.
+    Je lui fais parcourir un pourcentage de circonférence en un jour en fonction de la distance du périhélie.
+
+    Je récupère à nouveau sa world position et je calcule sa distance par rapport au foyer.
+    Je relance ensuite la fonction qui donne un pourcentage de circonférence.
+    """
+    percentage = 0
+    for day in range(orbital_period):
+        position = cmds.pointPosition(locator)
+        radius = distance between locator and barycenter
+        new_percentage = api . get_circumference_percentage(radius, 1)
+        percentage += new_percentage
+        
+        cmds.setKeyframe(poc, v=percentage, t=day)
+
 
 if __name__ == "__main__":
     create_orbit(

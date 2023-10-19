@@ -3,15 +3,16 @@ import math
 from solar_system_cartography import envs, utils
 
 class ObjectInOrbit():
-    def __init__(self, object_name:str, semi_major_axis:float, inclination:float, eccentricity:float) -> None:
+    def __init__(self, object_name:str, object_mass:float, semi_major_axis:float, inclination:float, eccentricity:float) -> None:
         self._name = object_name
         self._semi_major_axis = semi_major_axis
         self._inclination = inclination
         self._eccentricity = eccentricity
         self._attraction_mass = envs.SOLAR_MASS # to modify if other center of gravity
-        self._mass = 5.972e24
+        self._mass = object_mass
         self._semi_minor_axis = self.set_semi_minor_axis()
-        self._revolution_time = self.set_revolution_time()
+        self._orbital_period = self.set_orbital_period()
+        self._orbital_circumference = self.set_orbital_circumference()
         self._perihelion_distance = self.set_perihelion_distance()
         self._perihelion_velocity = self.set_perihelion_velocity()
         self._aphelion_distance = self.set_aphelion_distance()
@@ -29,7 +30,8 @@ class ObjectInOrbit():
         semi minor axis : {self._semi_minor_axis} AU
         inclination : {self._inclination}°
         eccentricity : {self._eccentricity}
-        revolution time : {self._revolution_time} days
+        period : {self._orbital_period} days
+        circumference : {self._orbital_circumference} m
         distance at perihelion : {self._perihelion_distance} AU
         velocity at perihelion : {self._perihelion_velocity} m/s
         distance at aphelion : {self._aphelion_distance} AU
@@ -51,16 +53,16 @@ class ObjectInOrbit():
     def get_eccentricity(self) ->float:
         return self._eccentricity
     
-    def get_revolution_time(self) ->float:
-        return self._revolution_time
+    def get_orbital_period(self) ->float:
+        return self._orbital_period
     
-    def set_revolution_time(self) ->float:
+    def set_orbital_period(self) ->float:
         """
         Calculates the time in days that it takes for a star to make a
         complete revolution around the Sun from its distance from the Sun.
         """
         # Using Kepler's law to calculate the orbital period (T)
-        orbital_period = 2 * math.pi * math.sqrt((self._semi_major_axis**3) / (envs.G * self._attraction_mass))
+        orbital_period = 2 * math.pi * math.sqrt((utils.convert_au_to_meters(self._semi_major_axis)**3) / (envs.G * self._attraction_mass))
         
         # Conversion to days
         return orbital_period / (60 * 60 * 24)
@@ -110,9 +112,25 @@ class ObjectInOrbit():
         """
         return math.sqrt(envs.G * (self._attraction_mass + self._mass) * (2 / utils.convert_au_to_meters(self._aphelion_distance) - 1 / utils.convert_au_to_meters(self._semi_major_axis)))
 
+    def get_orbital_circumference(self) ->float:
+        return self._orbital_circumference
+    
+    def set_orbital_circumference(self) ->float:
+        return 2 * math.pi * (self._semi_major_axis * envs.AU) # in meters
+    
+    def get_circumference_percentage(self, radius:float, time:int) ->float:
+        # time in days
+        # radius = perihelion distance at first
+
+        # Kepler's law
+        orbital_speed = (2 * math.pi * radius) / self._orbital_period
+
+        # percentage of covered distance
+        return self._orbital_circumference / 100 * (orbital_speed * time)
+    
 if __name__ == "__main__":
     # print(get_semi_minor_axis(30.0699, 0.00859))
-    # print(get_revolution_time(convert_au_to_meters(0.38709808989279954)))
+    # print(get_orbital_period(convert_au_to_meters(0.38709808989279954)))
 
     def get_perihelion():
         inclinaison_degrees = 162.238  # Inclinaison de l'orbite en degrés
@@ -131,10 +149,3 @@ if __name__ == "__main__":
         return argument_du_perihelie_degrees
     
     object_name = "Mercury"
-    
-    data = envs.PRESETS.get(object_name)
-    object = ObjectInOrbit(object_name, data["semi_major_axis"], data["inclination"], data["eccentricity"])
-    print(object)
-    print(object.get_revolution_time())
-    print(object.get_aphelion_velocity())
-    print(object.get_semi_minor_axis())

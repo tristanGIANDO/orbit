@@ -2,12 +2,14 @@
     "Mercury" : {
         "semi_major_axis" : 0.38709808989279954,
         "inclination" : 7.004,
-        "eccentricity" : 0.2056
+        "eccentricity" : 0.2056,
+        "mass" : 0.330e24
     },
     "Earth" : {
         "semi_major_axis" : 1.0000001124,
         "inclination" : 0,
-        "eccentricity" : 0.01671022
+        "eccentricity" : 0.01671022,
+        "mass" : 5.972e24
     },
     "Neptune" : {
         "semi_major_axis" : 30.0699,
