@@ -102,6 +102,7 @@ def get_aphelion_point(positions:dict) ->str:
             return i
         
 def create_orbit_animation(poc:str, percentage_dict:dict) ->None:
+    # animation along the orbit
     values_to_key = {}
     values_to_key["0"] = 0
     total_v = 0
@@ -112,10 +113,19 @@ def create_orbit_animation(poc:str, percentage_dict:dict) ->None:
     for t, v in values_to_key.items():
         cmds.setKeyframe(f"{poc}.parameter", v=v, t=t)
 
-    # cmds.keyTangent(poc, itt="linear", ott="linear")
-    # cmds.setInfinity(poc, poi="cycle")
+    cmds.keyTangent(f"{poc}.parameter", itt="spline", ott="spline")
+    cmds.setInfinity(f"{poc}.parameter", pri="cycle", poi="cycle")
 
-def build_all(obj:ObjectInOrbit) ->None:
+def create_object_animation(obj:str, axis_inclination:float, rotation_period:float) ->None:
+    cmds.setAttr(f"{obj}.rotateX", axis_inclination)
+
+    cmds.setKeyframe(f"{obj}.rotateY", v=0, t=0)
+    cmds.setKeyframe(f"{obj}.rotateY", v=359, t=rotation_period)
+
+    cmds.keyTangent(f"{obj}.rotateY", itt="spline", ott="spline")
+    cmds.setInfinity(f"{obj}.rotateY", pri="cycle", poi="cycle")
+
+def build(obj:ObjectInOrbit) ->None:
     name = obj.get_name()
 
     orbit = create_orbit(name,
@@ -125,10 +135,10 @@ def build_all(obj:ObjectInOrbit) ->None:
                  obj.get_eccentricity())
     
     offset = create_object(name)
-
     poc = attach_object_to_orbit(offset, orbit, obj.get_orbital_period())
 
     create_orbit_animation(poc, obj.get_covered_distance_each_day())
+    create_object_animation(offset, obj.get_axis_inclination(), obj.get_rotation_period())
 
 if __name__ == "__main__":
     create_orbit(

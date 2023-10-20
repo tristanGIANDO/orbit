@@ -3,13 +3,30 @@ import math
 from solar_system_cartography import envs, utils
 
 class ObjectInOrbit():
-    def __init__(self, object_name:str, object_mass:float, semi_major_axis:float, inclination:float, eccentricity:float) -> None:
+    def __init__(self, object_name:str, object_mass:float, semi_major_axis:float,
+                 inclination:float, eccentricity:float, rotation_period:float,
+                 axis_inclination:float,
+                 attraction_mass:float = envs.SOLAR_MASS) -> None:
+        
+        if not object_name:
+            raise RuntimeError("What is the name of the object ? Specify 'object_name'")
+        if not object_mass:
+            raise RuntimeError("Need to specify the object mass. (KG)")
+        if not semi_major_axis:
+            raise RuntimeError("Need the semi major axis (AU) to build the orbit.")
+        if not eccentricity:
+            raise RuntimeError("Need the eccentricity to build the orbit.")
+        if not rotation_period:
+            raise RuntimeError("Need the rotation period (day)")
+        
         self._name = object_name
         self._semi_major_axis = semi_major_axis
         self._inclination = inclination
         self._eccentricity = eccentricity
-        self._attraction_mass = envs.SOLAR_MASS # to modify if other center of gravity
+        self._attraction_mass = attraction_mass
         self._mass = object_mass
+        self._rotation_period = rotation_period
+        self._axis_inclination = axis_inclination
         self._semi_minor_axis = self.set_semi_minor_axis()
         self._orbital_period = self.set_orbital_period()
         self._orbital_circumference = self.set_orbital_circumference()
@@ -39,6 +56,7 @@ class ObjectInOrbit():
 
         # PHYSICAL CHARACTERISTICS
         mass : {self._mass} kg
+        rotation period : {self._rotation_period} d
             """
     
     def get_name(self) ->str:
@@ -53,6 +71,12 @@ class ObjectInOrbit():
     def get_eccentricity(self) ->float:
         return self._eccentricity
     
+    def get_axis_inclination(self) ->float:
+        return self._axis_inclination
+    
+    def get_rotation_period(self) ->float:
+        return self._rotation_period
+
     def get_orbital_period(self) ->float:
         return self._orbital_period
     

@@ -3,31 +3,73 @@
         "semi_major_axis" : 0.38709808989279954,
         "inclination" : 7.004,
         "eccentricity" : 0.2056,
-        "mass" : 0.330e24
+        "mass" : 0.330e24,
+        "day" : 58.6458,
+        "axis_inclination" : 0.03
+    },
+    "Venus" : {
+        "semi_major_axis" : "",
+        "inclination" : "",
+        "eccentricity" : "",
+        "mass" : "",
+        "day" : "",
+        "axis_inclination" : 177.36
     },
     "Earth" : {
         "semi_major_axis" : 1.0000001124,
         "inclination" : 0,
         "eccentricity" : 0.01671022,
-        "mass" : 5.972e24
+        "mass" : 5.972e24,
+        "day" : 0.99726949,
+        "axis_inclination" : 23.4366907752
+    },
+    "Mars" : {
+        "semi_major_axis" : "",
+        "inclination" : "",
+        "eccentricity" : "",
+        "mass" : "",
+        "day" : "",
+        "axis_inclination" : 25.19
+    },
+    "Jupiter" : {
+        "semi_major_axis" : "",
+        "inclination" : "",
+        "eccentricity" : "",
+        "mass" : "",
+        "day" : "",
+        "axis_inclination" : 3.12
+    },
+    "Saturn" : {
+        "semi_major_axis" : "",
+        "inclination" : "",
+        "eccentricity" : "",
+        "mass" : "",
+        "day" : "",
+        "axis_inclination" : 26.73
+    },
+    "Uranus" : {
+        "semi_major_axis" : "",
+        "inclination" : "",
+        "eccentricity" : "",
+        "mass" : "",
+        "day" : "",
+        "axis_inclination" : 97.8
     },
     "Neptune" : {
         "semi_major_axis" : 30.0699,
         "inclination" : 1.77,
-        "eccentricity" : 0.00859
+        "eccentricity" : 0.00859,
+        "day" : 0.67125,
+        "mass" : 1.0243e26
     },
     "Pluto" : {
         "semi_major_axis" : 39.4450697,
         "inclination" : 17.0890009,
-        "eccentricity" : 0.25024871,
-        "perihelion" : 112.5971417,
-        "ascending_node" : 10.376956
+        "eccentricity" : 0.25024871
     },
     "1P/Halley" : {
         "semi_major_axis" : 17.9,
         "inclination" : 162.238,
-        "eccentricity" : 0.96727,
-        "perihelion" : 111.8,
-        "ascending_node" : 58.14536
+        "eccentricity" : 0.96727
     }
 }

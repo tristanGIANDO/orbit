@@ -4,8 +4,8 @@ from solar_system_cartography.envs import PRESETS
 
 object_name = "Mercury"
     
-data = PRESETS.get(object_name)
-obj = ObjectInOrbit(object_name, data["mass"], data["semi_major_axis"], data["inclination"], data["eccentricity"])
+d = PRESETS.get(object_name)
+obj = ObjectInOrbit(object_name, d["mass"], d["semi_major_axis"], d["inclination"], d["eccentricity"], d["day"], d["axis_inclination"])
 print(obj)
 
-rig.build_all(obj)
+rig.build(obj)
