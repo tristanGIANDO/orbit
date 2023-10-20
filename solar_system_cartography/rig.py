@@ -1,5 +1,6 @@
 from maya import cmds
 import math
+from solar_system_cartography.api import ObjectInOrbit
 
 def convert_inclination(inclination:float) ->float:
     """Converts the inclination of an orbit in maya units.
@@ -27,26 +28,16 @@ def convert_eccentricity(eccentricity:float) ->float:
     return eccentricity / 2
 
 def create_object(object_name:str) ->str:
-    return cmds.spaceLocator(n=f"{object_name}_offset")
+    return cmds.spaceLocator(n=f"{object_name}_offset")[0]
 
-def attach_object_to_orbit(object_name:str, revolution_time:float):
-    obj = f"{object_name}_offset"
+def attach_object_to_orbit(object_name:str, orbit_name:str, revolution_time:float):
     poc = cmds.createNode("pointOnCurveInfo", n=f"{object_name}_POC")
-    orbit = f"{object_name}_orbit"
-    curve_attr = f"{orbit}.worldSpace[0]"
-
-    points_distances = get_distances(orbit)
-    furthest_point = get_perihelion_point(points_distances)
-    closest_point = get_aphelion_point(points_distances)
+    curve_attr = f"{orbit_name}.worldSpace[0]"
     
     cmds.connectAttr(curve_attr, f"{poc}.inputCurve")
-    cmds.connectAttr(f"{poc}.position", f"{obj}.translate")
-    
-    cmds.setKeyframe(f"{poc}.pr", v=0, t=0)
-    cmds.setKeyframe(f"{poc}.pr", v=100, t=revolution_time)
-    
-    cmds.keyTangent(poc, itt="linear", ott="linear")
-    cmds.setInfinity(poc, poi="cycle")
+    cmds.connectAttr(f"{poc}.position", f"{object_name}.translate")
+
+    return poc
 
 def create_orbit(name, semi_major_axis:float,
                  semi_minor_axis:float, inclination:float,
@@ -110,24 +101,34 @@ def get_aphelion_point(positions:dict) ->str:
         if d == min_distance:
             return i
         
-def move_along_orbit():
-    """
-    WORKFLOW
-    Dans Maya, je connais la world position du locator au périhélie.
-    Je lui fais parcourir un pourcentage de circonférence en un jour en fonction de la distance du périhélie.
-
-    Je récupère à nouveau sa world position et je calcule sa distance par rapport au foyer.
-    Je relance ensuite la fonction qui donne un pourcentage de circonférence.
-    """
-    percentage = 0
-    for day in range(orbital_period):
-        position = cmds.pointPosition(locator)
-        radius = distance between locator and barycenter
-        new_percentage = api . get_circumference_percentage(radius, 1)
-        percentage += new_percentage
+def create_orbit_animation(poc:str, percentage_dict:dict) ->None:
+    values_to_key = {}
+    values_to_key["0"] = 0
+    total_v = 0
+    for t, v in percentage_dict.items():
+        total_v += v
+        values_to_key[t+1] = total_v
         
-        cmds.setKeyframe(poc, v=percentage, t=day)
+    for t, v in values_to_key.items():
+        cmds.setKeyframe(f"{poc}.parameter", v=v, t=t)
 
+    # cmds.keyTangent(poc, itt="linear", ott="linear")
+    # cmds.setInfinity(poc, poi="cycle")
+
+def build_all(obj:ObjectInOrbit) ->None:
+    name = obj.get_name()
+
+    orbit = create_orbit(name,
+                 obj.get_semi_major_axis(),
+                 obj.get_semi_minor_axis(),
+                 obj.get_inclination(),
+                 obj.get_eccentricity())
+    
+    offset = create_object(name)
+
+    poc = attach_object_to_orbit(offset, orbit, obj.get_orbital_period())
+
+    create_orbit_animation(poc, obj.get_covered_distance_each_day())
 
 if __name__ == "__main__":
     create_orbit(

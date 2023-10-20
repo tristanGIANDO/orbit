@@ -18,16 +18,62 @@ Distance = circumference / 100 * (Vitesse_orbitale * Temps)
 print(f"Distance parcourue en {Temps} secondes : {Distance} mètres")
 """
 
-def get_object_position():
-    pos_at_perihelion = [0,-1]
-def get_circumference_percentage(self, radius:float, time:int) ->float:
-    # time in days
-    # radius = perihelion distance at first
+orbital_period = 87.95601264719063
+t = ((0.30751072261083995 * 149597870700) / 58983.30058671956)/3600
 
-    # Kepler's law
-    orbital_speed = (2 * math.pi * Rayon_orbite) / self._orbital_period
+c = 363853292112.728 #circonference en metres
 
-    # percentage of covered distance
-    percentage = self._orbital_circumference / 100 * (orbital_speed * time)
+d = 58983.30058671956 * (24*3600) #perihelion v*t
+print(f"en un jour au plus proche du soleil, mercure parcourt : {d} metres")
+p_max = 100 * d / c
+print(f"soit {p_max} % de sa revolution")
 
-get_circumference_percentage()
+d = 38865.572317592916 * (24*3600) #aphelion v*t
+print(f"en un jour au plus loin du soleil, mercure parcourt : {d} metres")
+p_min = 100 * d / c
+print(f"soit {p_min} % de sa revolution")
+
+# essaie de calculer la variation de pourcentage entre ces deux distances.
+# exemple :
+# {0 : 1.85,
+#  1 : 1.8,
+#  2 : 1.7,
+#  3 : 1.8,
+#  4 : 1.85
+# }
+# et on additionne le pourcentage de chaque jour pour avoir le pourcentage à appliquer dans le pointOnCurveInfo
+
+def get_covered_distance_each_day() ->dict:
+    orbital_period = 87.95601264719063
+    t = ((0.30751072261083995 * 149597870700) / 58983.30058671956)/3600
+
+    c = 363853292112.728 #circonference en metres
+
+    d = 58983.30058671956 * (24*3600) #perihelion v*t
+    print(f"en un jour au plus proche du soleil, mercure parcourt : {d} metres")
+    p_max = 100 * d / c
+    print(f"soit {p_max} % de sa revolution")
+
+    d = 38865.572317592916 * (24*3600) #aphelion v*t
+    print(f"en un jour au plus loin du soleil, mercure parcourt : {d} metres")
+    p_min = 100 * d / c
+    print(f"soit {p_min} % de sa revolution")
+
+    transition_dict = {} 
+    max_to_min_speed_range = range(0, int(orbital_period / 2))
+    for key in max_to_min_speed_range:
+        transition_value = p_max + (p_min - p_max) * (key - max_to_min_speed_range.start) / (max_to_min_speed_range.stop - 1)
+        
+        transition_dict[key] = transition_value
+
+    min_to_max_speed_range = range(int(orbital_period / 2), int(orbital_period)+2)
+    for key in min_to_max_speed_range:
+        transition_value = p_min + (p_max - p_min) * (key - min_to_max_speed_range.start) / (min_to_max_speed_range.stop - 1)
+        
+        transition_dict[key] = transition_value
+
+    return transition_dict
+
+import json
+print(json.dumps(transition_dict, indent=4))
+

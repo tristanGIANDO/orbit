@@ -128,6 +128,34 @@ class ObjectInOrbit():
         # percentage of covered distance
         return self._orbital_circumference / 100 * (orbital_speed * time)
     
+    def get_covered_distance_each_day(self) ->dict:
+        """Based on the speed at perihelion and aphelion,
+        calculate the percentage of circumference covered each day by the object.
+
+        Returns:
+            dict: Dictionary with percentage covered per day
+        """
+        d = self._perihelion_velocity * (24*3600) #perihelion v*t
+        p_max = 100 * d / self._orbital_circumference
+
+        d = self._aphelion_velocity * (24*3600) #aphelion v*t
+        p_min = 100 * d / self._orbital_circumference
+
+        percentage_covered_dist = {} 
+        max_to_min_speed_range = range(0, int(self._orbital_period / 2))
+        for key in max_to_min_speed_range:
+            transition_value = p_max + (p_min - p_max) * (key - max_to_min_speed_range.start) / (max_to_min_speed_range.stop - 1)
+            
+            percentage_covered_dist[key] = transition_value
+
+        min_to_max_speed_range = range(int(self._orbital_period / 2), int(self._orbital_period)+2)
+        for key in min_to_max_speed_range:
+            transition_value = p_min + (p_max - p_min) * (key - min_to_max_speed_range.start) / (min_to_max_speed_range.stop - 1)
+            
+            percentage_covered_dist[key] = transition_value
+
+        return percentage_covered_dist
+    
 if __name__ == "__main__":
     # print(get_semi_minor_axis(30.0699, 0.00859))
     # print(get_orbital_period(convert_au_to_meters(0.38709808989279954)))
