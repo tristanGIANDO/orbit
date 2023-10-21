@@ -5,7 +5,7 @@ from solar_system_cartography.api import ObjectInOrbit
 from solar_system_cartography.envs import PRESETS
 
 try:
-    from solar_system_cartography import rig
+    from solar_system_cartography.rig import Rig
     from maya import OpenMayaUI as omui
     from shiboken2 import wrapInstance
 except:
@@ -148,10 +148,10 @@ class MainUI(QtWidgets.QMainWindow):
                             axis_inclination=d["axis_inclination"],
                             object_radius=d["radius"])
         print(obj)
-        try:
-            rig.build(obj)
-        except:
-            print("Visualisation available in Maya only")
+        # try:
+        rig = Rig(obj)
+        # except:
+        #     print("Visualisation available in Maya only")
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
