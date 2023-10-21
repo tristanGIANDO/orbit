@@ -1,6 +1,11 @@
 import sys
+from functools import partial
 from solar_system_cartography.Qt import QtWidgets
+from solar_system_cartography.api import ObjectInOrbit
+from solar_system_cartography.envs import PRESETS
+
 try:
+    from solar_system_cartography import rig
     from maya import OpenMayaUI as omui
     from shiboken2 import wrapInstance
 except:
@@ -28,6 +33,8 @@ class MainUI(QtWidgets.QMainWindow):
         self.tab_widget.addTab(self.select_tab, "SELECT")
         self._layout.addWidget(self.tab_widget)
 
+        self.create_connections()
+
     def create_first_tab(self) ->None:
         self.first_tab = QtWidgets.QWidget()
         self.first_tab.setLayout(QtWidgets.QVBoxLayout())
@@ -42,12 +49,12 @@ class MainUI(QtWidgets.QMainWindow):
         # object grid
         object_group_box = QtWidgets.QGroupBox("PHYSICAL CHARACTERISTICS")
         object_grid_layout = QtWidgets.QGridLayout()
-        data = {}
-        data["Mass (kg)"] = QtWidgets.QLineEdit()
-        data["Rotation period (d)"] = QtWidgets.QLineEdit()
-        data["Axis inclination (°)"] = QtWidgets.QLineEdit()
+        self.obj_data = {}
+        self.obj_data["mass"] = QtWidgets.QLineEdit()
+        self.obj_data["day"] = QtWidgets.QLineEdit()
+        self.obj_data["axis_inclination"] = QtWidgets.QLineEdit()
         i = 1      
-        for lbl,box in data.items():
+        for lbl,box in self.obj_data.items():
             object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
             object_grid_layout.addWidget(box, i, 1)
             i += 1
@@ -57,12 +64,12 @@ class MainUI(QtWidgets.QMainWindow):
         # orbital grid
         orbital_group_box = QtWidgets.QGroupBox("ORBITAL CHARACTERISTICS")
         orbital_grid_layout = QtWidgets.QGridLayout()
-        data = {}
-        data["Semi Major Axis (AU)"] = QtWidgets.QLineEdit()
-        data["Inclination (°)"] = QtWidgets.QLineEdit()
-        data["Eccentricity"] = QtWidgets.QLineEdit()
+        self.orb_data = {}
+        self.orb_data["semi_major_axis"] = QtWidgets.QLineEdit()
+        self.orb_data["inclination"] = QtWidgets.QLineEdit()
+        self.orb_data["eccentricity"] = QtWidgets.QLineEdit()
         i = 1      
-        for lbl,box in data.items():
+        for lbl,box in self.orb_data.items():
             orbital_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
             orbital_grid_layout.addWidget(box, i, 1)
             i += 1
@@ -89,8 +96,58 @@ class MainUI(QtWidgets.QMainWindow):
         self.presets_menu = self.menu_bar.addMenu("Presets")
         self.mercury_action = QtWidgets.QAction("Mercury", self)
         self.venus_action = QtWidgets.QAction("Venus", self)
+        self.earth_action = QtWidgets.QAction("Earth", self)
+        self.mars_action = QtWidgets.QAction("Mars", self)
+        self.jupiter_action = QtWidgets.QAction("Jupiter", self)
         self.presets_menu.addAction(self.mercury_action)
         self.presets_menu.addAction(self.venus_action)
+        self.presets_menu.addAction(self.earth_action)
+        self.presets_menu.addAction(self.mars_action)
+        self.presets_menu.addAction(self.jupiter_action)
+
+    def create_connections(self) ->None:
+        self.create_button.clicked.connect(self.on_create_button_clicked)
+        self.mercury_action.triggered.connect(partial(self.on_preset_triggered, "Mercury"))
+        self.venus_action.triggered.connect(partial(self.on_preset_triggered, "Venus"))
+        self.earth_action.triggered.connect(partial(self.on_preset_triggered, "Earth"))
+        self.mars_action.triggered.connect(partial(self.on_preset_triggered, "Mars"))
+        self.jupiter_action.triggered.connect(partial(self.on_preset_triggered, "Jupiter"))
+
+    def read(self) ->dict:
+        data = {
+            "mass" : float(self.obj_data.get("mass").text()),
+            "day" : float(self.obj_data.get("day").text()),
+            "axis_inclination" : float(self.obj_data.get("axis_inclination").text()),
+            "semi_major_axis" : float(self.orb_data.get("semi_major_axis").text()),
+            "inclination" : float(self.orb_data.get("inclination").text()),
+            "eccentricity" : float(self.orb_data.get("eccentricity").text()),
+        }
+        return data
+    
+    def on_preset_triggered(self, name) ->None:
+        d = PRESETS.get(name)
+        self.name_line_edit.setText(name)
+        self.obj_data["mass"].setText(str(d["mass"]))
+        self.obj_data["day"].setText(str(d["day"]))
+        self.obj_data["axis_inclination"].setText(str(d["axis_inclination"]))
+        self.orb_data["semi_major_axis"].setText(str(d["semi_major_axis"]))
+        self.orb_data["inclination"].setText(str(d["inclination"]))
+        self.orb_data["eccentricity"].setText(str(d["eccentricity"]))
+
+    def on_create_button_clicked(self) ->None:
+        d = self.read()
+        obj = ObjectInOrbit(self.name_line_edit.text(),
+                            d["mass"],
+                            d["semi_major_axis"],
+                            d["inclination"],
+                            d["eccentricity"],
+                            d["day"],
+                            d["axis_inclination"])
+        print(obj)
+        try:
+            rig.build(obj)
+        except:
+            print("Visualisation available in Maya only")
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
@@ -119,6 +176,5 @@ def run_ui():
         except:
             pass
     
-
 if __name__ == '__main__':
     run_ui()
