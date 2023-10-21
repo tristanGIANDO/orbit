@@ -1,9 +1,14 @@
 import sys
-from PyQt5 import QtWidgets
+from solar_system_cartography.Qt import QtWidgets
+try:
+    from maya import OpenMayaUI as omui
+    from shiboken2 import wrapInstance
+except:
+    print("Standalone mode")
 
 class MainUI(QtWidgets.QMainWindow):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super(MainUI, self).__init__(parent)
 
         self.setWindowTitle("Cartographer v-dev")
         self.setGeometry(100, 100, 600, 400)
@@ -19,31 +24,55 @@ class MainUI(QtWidgets.QMainWindow):
         self.create_first_tab()
         self.create_second_tab()
 
-        self.tab_widget.addTab(self.create_tab, "CREATE")
+        self.tab_widget.addTab(self.first_tab, "CREATE")
         self.tab_widget.addTab(self.select_tab, "SELECT")
         self._layout.addWidget(self.tab_widget)
 
     def create_first_tab(self) ->None:
-        self.create_tab = QtWidgets.QWidget()
-        create_layout = QtWidgets.QGridLayout()
-        create_button = QtWidgets.QPushButton("CREATE")
+        self.first_tab = QtWidgets.QWidget()
+        self.first_tab.setLayout(QtWidgets.QVBoxLayout())
         
-        # data
-        object_title = QtWidgets.QLabel(f"PHYSICAL CHARACTERISTICS")
+        name_layout = QtWidgets.QHBoxLayout()
+        name_lbl = QtWidgets.QLabel("Name")
+        self.name_line_edit = QtWidgets.QLineEdit()
+        name_layout.addWidget(name_lbl)
+        name_layout.addWidget(self.name_line_edit)
+        self.first_tab.layout().addLayout(name_layout)
+        
+        # object grid
+        object_group_box = QtWidgets.QGroupBox("PHYSICAL CHARACTERISTICS")
+        object_grid_layout = QtWidgets.QGridLayout()
         data = {}
-        data["Name"] = QtWidgets.QLineEdit()
-        data["Mass"] = QtWidgets.QDoubleSpinBox()
-        data["Rotation period"] = QtWidgets.QDoubleSpinBox()
-        data["Axis inclination"] = QtWidgets.QDoubleSpinBox()
-
-        i = 0      
+        data["Mass (kg)"] = QtWidgets.QLineEdit()
+        data["Rotation period (d)"] = QtWidgets.QLineEdit()
+        data["Axis inclination (°)"] = QtWidgets.QLineEdit()
+        i = 1      
         for lbl,box in data.items():
-            create_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
-            create_layout.addWidget(box, i, 1)
+            object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
+            object_grid_layout.addWidget(box, i, 1)
             i += 1
+        object_group_box.setLayout(object_grid_layout)
+        self.first_tab.layout().addWidget(object_group_box)
 
-        create_layout.addWidget(create_button, 5, 0, 1, 2)
-        self.create_tab.setLayout(create_layout)
+        # orbital grid
+        orbital_group_box = QtWidgets.QGroupBox("ORBITAL CHARACTERISTICS")
+        orbital_grid_layout = QtWidgets.QGridLayout()
+        data = {}
+        data["Semi Major Axis (AU)"] = QtWidgets.QLineEdit()
+        data["Inclination (°)"] = QtWidgets.QLineEdit()
+        data["Eccentricity"] = QtWidgets.QLineEdit()
+        i = 1      
+        for lbl,box in data.items():
+            orbital_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
+            orbital_grid_layout.addWidget(box, i, 1)
+            i += 1
+        orbital_group_box.setLayout(orbital_grid_layout)
+        self.first_tab.layout().addWidget(orbital_group_box)
+
+        # create button
+        self.create_button = QtWidgets.QPushButton("CREATE")
+        self.first_tab.layout().addWidget(self.create_button)
+        self.first_tab.layout().addStretch(1)
 
     def create_second_tab(self) ->None:
         self.select_tab = QtWidgets.QWidget()
@@ -63,8 +92,33 @@ class MainUI(QtWidgets.QMainWindow):
         self.presets_menu.addAction(self.mercury_action)
         self.presets_menu.addAction(self.venus_action)
 
+def maya_main_window():
+    main_window_ptr = omui.MQtUtil.mainWindow()
+    return wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
+
+def run_ui():
+    try:
+        parent = maya_main_window()
+        global my_window
+        my_window = MainUI(parent)
+        my_window.show()
+    except:
+        try:
+            app = QtWidgets.QApplication(sys.argv)
+        except:
+            try:
+                ui.close()
+            except:
+                pass
+
+        ui = MainUI()
+        ui.show()
+
+        try:
+            sys.exit(app.exec_())
+        except:
+            pass
+    
+
 if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
-    window = MainUI()
-    window.show()
-    sys.exit(app.exec_())
+    run_ui()

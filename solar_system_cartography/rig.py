@@ -1,6 +1,7 @@
 from maya import cmds
 import math
 from solar_system_cartography.api import ObjectInOrbit
+from solar_system_cartography import envs
 
 def convert_inclination(inclination:float) ->float:
     """Converts the inclination of an orbit in maya units.
@@ -27,8 +28,23 @@ def convert_eccentricity(eccentricity:float) ->float:
     """
     return eccentricity / 2
 
+def convert_radius(radius:float) ->float:
+    return radius * 1000 / envs.AU
+
 def create_object(object_name:str) ->str:
-    return cmds.spaceLocator(n=f"{object_name}_offset")[0]
+    return cmds.spaceLocator(n=f"{object_name}_follow")[0]
+
+def create_control(object_name:str, offset:str) ->str:
+    control = cmds.spaceLocator(n=f"{object_name}_control")[0]
+    cmds.parent(control,offset)
+    cmds.matchTransform(control,offset)
+    return control
+
+def create_geometry(object_name:str, control:str) ->str:
+    obj = cmds.polySphere(n=f"{object_name}_geo", radius=0.1)[0]
+    cmds.parent(obj,control)
+    cmds.matchTransform(obj, control)
+    return obj
 
 def attach_object_to_orbit(object_name:str, orbit_name:str, revolution_time:float):
     poc = cmds.createNode("pointOnCurveInfo", n=f"{object_name}_POC")
@@ -116,14 +132,14 @@ def create_orbit_animation(poc:str, percentage_dict:dict) ->None:
     cmds.keyTangent(f"{poc}.parameter", itt="spline", ott="spline")
     cmds.setInfinity(f"{poc}.parameter", pri="cycle", poi="cycle")
 
-def create_object_animation(obj:str, axis_inclination:float, rotation_period:float) ->None:
-    cmds.setAttr(f"{obj}.rotateX", axis_inclination)
+def create_object_animation(control:str, offset:str, axis_inclination:float, rotation_period:float) ->None:
+    cmds.setAttr(f"{offset}.rotateX", axis_inclination)
 
-    cmds.setKeyframe(f"{obj}.rotateY", v=0, t=0)
-    cmds.setKeyframe(f"{obj}.rotateY", v=359, t=rotation_period)
+    cmds.setKeyframe(f"{control}.rotateY", v=0, t=0)
+    cmds.setKeyframe(f"{control}.rotateY", v=359, t=rotation_period)
 
-    cmds.keyTangent(f"{obj}.rotateY", itt="spline", ott="spline")
-    cmds.setInfinity(f"{obj}.rotateY", pri="cycle", poi="cycle")
+    cmds.keyTangent(f"{control}.rotateY", itt="spline", ott="spline")
+    cmds.setInfinity(f"{control}.rotateY", pri="cycle", poi="cycle")
 
 def build(obj:ObjectInOrbit) ->None:
     name = obj.get_name()
@@ -135,10 +151,12 @@ def build(obj:ObjectInOrbit) ->None:
                  obj.get_eccentricity())
     
     offset = create_object(name)
+    control = create_control(name, offset)
+    geo = create_geometry(name, control)
     poc = attach_object_to_orbit(offset, orbit, obj.get_orbital_period())
 
     create_orbit_animation(poc, obj.get_covered_distance_each_day())
-    create_object_animation(offset, obj.get_axis_inclination(), obj.get_rotation_period())
+    create_object_animation(control, offset, obj.get_axis_inclination(), obj.get_rotation_period())
 
 if __name__ == "__main__":
     create_orbit(

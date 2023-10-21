@@ -5,14 +5,15 @@
         "eccentricity" : 0.2056,
         "mass" : 0.330e24,
         "day" : 58.6458,
-        "axis_inclination" : 0.03
+        "axis_inclination" : 0.03,
+        "radius" : 2439.7
     },
     "Venus" : {
-        "semi_major_axis" : "",
-        "inclination" : "",
-        "eccentricity" : "",
-        "mass" : "",
-        "day" : "",
+        "semi_major_axis" : 0.723336,
+        "inclination" : 3.39471,
+        "eccentricity" : 0.00678,
+        "mass" : 4.8675e24,
+        "day" : -243.023,
         "axis_inclination" : 177.36
     },
     "Earth" : {
@@ -24,19 +25,19 @@
         "axis_inclination" : 23.4366907752
     },
     "Mars" : {
-        "semi_major_axis" : "",
-        "inclination" : "",
-        "eccentricity" : "",
-        "mass" : "",
-        "day" : "",
+        "semi_major_axis" : 1.52371,
+        "inclination" : 1.85,
+        "eccentricity" : 0.09339,
+        "mass" : 6.4185e23,
+        "day" : 1.025957,
         "axis_inclination" : 25.19
     },
     "Jupiter" : {
-        "semi_major_axis" : "",
-        "inclination" : "",
-        "eccentricity" : "",
-        "mass" : "",
-        "day" : "",
+        "semi_major_axis" : 5.20289,
+        "inclination" : 1.304,
+        "eccentricity" : 0.04839,
+        "mass" : 1.8986e27,
+        "day" : 0.41351,
         "axis_inclination" : 3.12
     },
     "Saturn" : {
