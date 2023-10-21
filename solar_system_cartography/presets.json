@@ -6,7 +6,7 @@
         "mass" : 0.330e24,
         "day" : 58.6458,
         "axis_inclination" : 0.03,
-        "radius" : 2439.7
+        "radius" : 2439700
     },
     "Venus" : {
         "semi_major_axis" : 0.723336,
@@ -38,7 +38,8 @@
         "eccentricity" : 0.04839,
         "mass" : 1.8986e27,
         "day" : 0.41351,
-        "axis_inclination" : 3.12
+        "axis_inclination" : 3.12,
+        "radius" : 69911000
     },
     "Saturn" : {
         "semi_major_axis" : "",

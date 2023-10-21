@@ -53,6 +53,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.obj_data["mass"] = QtWidgets.QLineEdit()
         self.obj_data["day"] = QtWidgets.QLineEdit()
         self.obj_data["axis_inclination"] = QtWidgets.QLineEdit()
+        self.obj_data["radius"] = QtWidgets.QLineEdit()
         i = 1      
         for lbl,box in self.obj_data.items():
             object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -117,6 +118,7 @@ class MainUI(QtWidgets.QMainWindow):
         data = {
             "mass" : float(self.obj_data.get("mass").text()),
             "day" : float(self.obj_data.get("day").text()),
+            "radius" : float(self.obj_data.get("radius").text()),
             "axis_inclination" : float(self.obj_data.get("axis_inclination").text()),
             "semi_major_axis" : float(self.orb_data.get("semi_major_axis").text()),
             "inclination" : float(self.orb_data.get("inclination").text()),
@@ -129,6 +131,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.name_line_edit.setText(name)
         self.obj_data["mass"].setText(str(d["mass"]))
         self.obj_data["day"].setText(str(d["day"]))
+        self.obj_data["radius"].setText(str(d["radius"]))
         self.obj_data["axis_inclination"].setText(str(d["axis_inclination"]))
         self.orb_data["semi_major_axis"].setText(str(d["semi_major_axis"]))
         self.orb_data["inclination"].setText(str(d["inclination"]))
@@ -136,13 +139,14 @@ class MainUI(QtWidgets.QMainWindow):
 
     def on_create_button_clicked(self) ->None:
         d = self.read()
-        obj = ObjectInOrbit(self.name_line_edit.text(),
-                            d["mass"],
-                            d["semi_major_axis"],
-                            d["inclination"],
-                            d["eccentricity"],
-                            d["day"],
-                            d["axis_inclination"])
+        obj = ObjectInOrbit(object_name=self.name_line_edit.text(),
+                            object_mass=d["mass"],
+                            semi_major_axis=d["semi_major_axis"],
+                            inclination=d["inclination"],
+                            eccentricity=d["eccentricity"],
+                            rotation_period=d["day"],
+                            axis_inclination=d["axis_inclination"],
+                            object_radius=d["radius"])
         print(obj)
         try:
             rig.build(obj)

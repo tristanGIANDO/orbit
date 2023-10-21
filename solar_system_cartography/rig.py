@@ -29,7 +29,7 @@ def convert_eccentricity(eccentricity:float) ->float:
     return eccentricity / 2
 
 def convert_radius(radius:float) ->float:
-    return radius * 1000 / envs.AU
+    return radius / envs.AU
 
 def create_object(object_name:str) ->str:
     return cmds.spaceLocator(n=f"{object_name}_follow")[0]
@@ -40,8 +40,8 @@ def create_control(object_name:str, offset:str) ->str:
     cmds.matchTransform(control,offset)
     return control
 
-def create_geometry(object_name:str, control:str) ->str:
-    obj = cmds.polySphere(n=f"{object_name}_geo", radius=0.1)[0]
+def create_geometry(object_name:str, control:str, radius:float) ->str:
+    obj = cmds.polySphere(n=f"{object_name}_geo", radius=convert_radius(radius))[0]
     cmds.parent(obj,control)
     cmds.matchTransform(obj, control)
     return obj
@@ -152,7 +152,7 @@ def build(obj:ObjectInOrbit) ->None:
     
     offset = create_object(name)
     control = create_control(name, offset)
-    geo = create_geometry(name, control)
+    geo = create_geometry(name, control, obj.get_radius())
     poc = attach_object_to_orbit(offset, orbit, obj.get_orbital_period())
 
     create_orbit_animation(poc, obj.get_covered_distance_each_day())
