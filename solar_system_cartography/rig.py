@@ -1,15 +1,15 @@
 from maya import cmds
 import math
 from solar_system_cartography.api import ObjectInOrbit
-from solar_system_cartography import envs
+from solar_system_cartography import envs, utils
 
 class Rig():
-    def __init__(self, obj:ObjectInOrbit) ->None:
+    def __init__(self, obj:ObjectInOrbit, create_sun:bool=True) ->None:
         self._obj = obj
         self._name = obj.get_name()
         self.build()
 
-    def convert_inclination(self, inclination:float) ->float:
+    def get_inclination(self) ->float:
         """Converts the inclination of an orbit in maya units.
 
         Args:
@@ -18,13 +18,14 @@ class Rig():
         Returns:
             float: The converted inclination
         """
+        inclination = self._obj.get_inclination()
         if inclination > 90:
             inclination = -(180 - inclination)
         
         return inclination
 
-    def convert_eccentricity(self, eccentricity:float) ->float:
-        """In Maya, eccentricity is the center of a Nurbscurve. Attribute is r*2
+    def get_eccentricity(self) ->float:
+        """In Maya, eccentricity is the center of a Nurbscurve. Attribute is r*2 (obsolete ?)
 
         Args:
             eccentricity (float): the eccentricity in degrees
@@ -32,27 +33,84 @@ class Rig():
         Returns:
             float: the converted eccentricity
         """
-        return eccentricity / 2
+        eccentricity = self._obj.get_eccentricity()
+        if self._obj.get_inclination() > 90:
+            eccentricity = eccentricity
 
-    def convert_radius(self, radius:float) ->float:
-        return radius / envs.AU
+        return eccentricity # / 2
 
-    def create_object(self) ->str:
+    def get_radius(self) ->float:
+        return self._obj.get_radius() / envs.AU
+
+    def cr_barycenter(self) ->str:
+        name = "barycenter"
+        if not cmds.objExists(name):
+            cmds.spaceLocator(n=name)[0]
+        return name
+
+    def cr_orbit(self) ->str:
+        """Creates the orbit of the object
+
+        Args:
+        semi major axis : radius
+        eccentricity : center Z
+        argument periapsis : rotate Y
+        inclination : rotate Z
+        ascending node : rotate Y from sun
+
+        Returns:
+            str: The created orbit DAG node
+        """
+        # create orbit offset
+        offset = cmds.group(n=f"{self._name}_orbit_offset", em=True)
+        # create circle
+        orbit = cmds.circle(nr=(0, 1, 0),
+                            c=(0, 0, 0),
+                            sw=360,
+                            r=1,
+                            d=3,
+                            ut=0,
+                            tol=0.01,
+                            s=100,
+                            n=f"{self._name}_orbit")[0]
+        cmds.parent(orbit, offset)
+
+        # set size
+        cmds.setAttr(f"{orbit}.scaleZ", self._obj.get_semi_major_axis())
+        cmds.setAttr(f"{orbit}.scaleX", self._obj.get_semi_minor_axis())
+        # set inclination
+        cmds.setAttr(f"{orbit}.rotateZ", self.get_inclination())
+        # set eccentricity
+        orbit_node = cmds.listHistory(orbit)[-1]
+        cmds.setAttr(f"{orbit_node}.centerZ", self.get_eccentricity())
+        # set orientations
+        cmds.setAttr(f"{orbit}.rotateY", self._obj.get_arg_periapsis())
+        cmds.setAttr(f"{offset}.rotateY", self._obj.get_ascending_node())
+
+        return orbit
+
+    def cr_hierarchy(self, orbit:str, offset:str) ->str:
+        group = cmds.group(n=f"{self._name}_group", em=True)
+        cmds.parent(f"{orbit}_offset", group)
+        cmds.parent(offset, group)
+        return group
+
+    def cr_offset(self) ->str:
         return cmds.spaceLocator(n=f"{self._name}_follow")[0]
 
-    def create_control(self, offset:str) ->str:
+    def cr_control(self, offset:str) ->str:
         control = cmds.spaceLocator(n=f"{self._name}_control")[0]
         cmds.parent(control, offset)
         cmds.matchTransform(control, offset)
         return control
 
-    def create_geometry(self, control:str) ->str:
-        obj = cmds.polySphere(n=f"{self._name}_geo", radius=self.convert_radius(self._obj.get_radius()))[0]
+    def cr_geo(self, control:str) ->str:
+        obj = cmds.polySphere(n=f"{self._name}_geo", radius=0.5)[0]
         cmds.parent(obj,control)
         cmds.matchTransform(obj, control)
         return obj
 
-    def attach_object_to_orbit(self, orbit_name:str, offset_name):
+    def cstr_offset_orbit(self, orbit_name:str, offset_name):
         poc = cmds.createNode("pointOnCurveInfo", n=f"{self._name}_POC")
         curve_attr = f"{orbit_name}.worldSpace[0]"
         
@@ -61,40 +119,9 @@ class Rig():
 
         return poc
 
-    def create_orbit(self) ->str:
-        """Creates the orbit of the object
-
-        Args:
-            name (str): The object name
-            semi_major_axis (float): Orbit semi major axis
-            semi_minor_axis (float): Orbit semi minor axis
-            inclination (float): Orbit inclination
-            eccentricity (float): Orbit eccentricity
-
-        Returns:
-            str: The created orbit DAG node
-        """
-        # create circle
-        orbit = cmds.circle(nr=(0, 1, 0),
-                            c=(0, 0, 0),
-                            sw=360,
-                            r=0.5,
-                            d=3,
-                            ut=0,
-                            tol=0.01,
-                            s=100,
-                            n=f"{self._name}_orbit")[0]
-        # set size
-        cmds.setAttr(f"{orbit}.scaleX", self._obj.get_semi_major_axis())
-        cmds.setAttr(f"{orbit}.scaleZ", self._obj.get_semi_minor_axis())
-        # set inclination
-        cmds.setAttr(f"{orbit}.rotateX", self.convert_inclination(self._obj.get_inclination()))
-        # set eccentricity
-        orbit_node = cmds.listHistory(orbit)[-1]
-        cmds.setAttr(f"{orbit_node}.centerZ", self.convert_eccentricity(self._obj.get_eccentricity()))
-
-        return orbit
-
+    def cstr_orbit_barycenter(self, orbit:str, barycenter:str) ->None:
+        cmds.connectAttr(f"{barycenter}.worldMatrix[0]", f"{orbit}.offsetParentMatrix", f=True)
+    
     def get_distances(orbit:str) ->dict:
         barycenter_pos = [0.0, 0.0, 0.0]
         positions = {}
@@ -121,22 +148,62 @@ class Rig():
             if d == min_distance:
                 return i
             
-    def create_orbit_animation(self, poc:str) ->None:
-        # animation along the orbit
-        values_to_key = {}
-        values_to_key["0"] = 0
-        total_v = 0
-        for t, v in self._obj.get_covered_distance_each_day().items():
-            total_v += v
-            values_to_key[t+1] = total_v
+    # def anim_orbit(self, poc:str) ->None:
+    #     # animation along the orbit
+    #     values_to_key = {}
+    #     total_v = 0
+    #     start = self._obj.get_days()
+    #     values_to_key[str(start)] = total_v
+    #     for t, v in self._obj.get_covered_distance_each_day().items():
+    #         total_v += v
+    #         values_to_key[t+start+1] = total_v
             
-        for t, v in values_to_key.items():
+    #     for t, v in values_to_key.items():
+    #         if v >= 100:
+    #             break
+    #         cmds.setKeyframe(f"{poc}.parameter", v=v, t=t)
+
+    #     cmds.keyTangent(f"{poc}.parameter", itt="spline", ott="spline")
+    #     cmds.setInfinity(f"{poc}.parameter", pri="cycle", poi="cycle")
+
+    def anim_orbit(self, poc:str) ->None:
+        a = self._obj.get_semi_major_axis() * envs.AU
+        b = self._obj.get_semi_minor_axis() * envs.AU
+        av = self._obj.get_perihelion_velocity()
+        bv = self._obj.get_aphelion_velocity()
+        period = self._obj.get_orbital_period()
+        c = self._obj.get_orbital_circumference()
+
+        period_p = int(0.01 * period)
+
+        ad = av * 3600 * period_p
+        bd = bv * 3600 * period_p
+
+        adp = ad / c * 100
+        bdp = bd / c * 100
+
+        # keys = {
+        #     # keyframe : percentage
+        #     0 : 0,
+        #     period_p : adp,
+        #     int(period)/2 : 50,
+        #     int(period)/2 + period_p : 50 + bdp,
+        #     int(period) - period_p : 100 - adp
+        # }
+        keys = {
+            0 : 0,
+            int(period)/2 : 50,
+            int(period) : 100
+        }
+
+        for t, v in keys.items():
+            print(t, v)
             cmds.setKeyframe(f"{poc}.parameter", v=v, t=t)
 
         cmds.keyTangent(f"{poc}.parameter", itt="spline", ott="spline")
         cmds.setInfinity(f"{poc}.parameter", pri="cycle", poi="cycle")
 
-    def create_object_animation(self, control:str, offset:str) ->None:
+    def anim_offset(self, control:str, offset:str) ->None:
         cmds.setAttr(f"{offset}.rotateX", self._obj.get_axis_inclination())
 
         cmds.setKeyframe(f"{control}.rotateY", v=0, t=0)
@@ -146,13 +213,18 @@ class Rig():
         cmds.setInfinity(f"{control}.rotateY", pri="cycle", poi="cycle")
 
     def build(self) ->None:
-        orbit = self.create_orbit()
-        offset = self.create_object()
-        control = self.create_control(offset)
-        geo = self.create_geometry(control)
-        poc = self.attach_object_to_orbit(orbit, offset)
-        self.create_orbit_animation(poc)
-        self.create_object_animation(control, offset)
+        barycenter = self.cr_barycenter()
+        orbit = self.cr_orbit()
+        offset = self.cr_offset()
+        control = self.cr_control(offset)
+        geo = self.cr_geo(control)
+        group = self.cr_hierarchy(orbit,offset)
+
+        poc = self.cstr_offset_orbit(orbit, offset)
+        self.cstr_orbit_barycenter(orbit, barycenter)
+
+        self.anim_orbit(poc)
+        self.anim_offset(control, offset)
 
 if __name__ == "__main__":
     pass

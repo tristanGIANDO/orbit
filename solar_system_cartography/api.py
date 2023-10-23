@@ -1,12 +1,11 @@
 import math
-
-from solar_system_cartography import envs, utils
+from solar_system_cartography import envs, utils, database
 
 class ObjectInOrbit():
     def __init__(self, object_name:str, object_mass:float, semi_major_axis:float,
                  inclination:float, eccentricity:float, rotation_period:float,
-                 axis_inclination:float, object_radius:float,
-                 attraction_mass:float = envs.SOLAR_MASS) -> None:
+                 axis_inclination:float, ascending_node:float, arg_periapsis:float, object_radius:float=0.05,
+                 attraction_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1]) -> None:
         
         if not object_name:
             raise RuntimeError("What is the name of the object ? Specify 'object_name'")
@@ -28,6 +27,9 @@ class ObjectInOrbit():
         self._radius = object_radius
         self._rotation_period = rotation_period
         self._axis_inclination = axis_inclination
+        self._perihelion_day = random_perihelion_day
+        self._arg_periapsis = arg_periapsis
+        self._ascending_node = ascending_node
         self._semi_minor_axis = self.set_semi_minor_axis()
         self._orbital_period = self.set_orbital_period()
         self._orbital_circumference = self.set_orbital_circumference()
@@ -35,7 +37,10 @@ class ObjectInOrbit():
         self._perihelion_velocity = self.set_perihelion_velocity()
         self._aphelion_distance = self.set_aphelion_distance()
         self._aphelion_velocity = self.set_aphelion_velocity()
-        
+
+        # db = database.Database(path=r"C:\Users\giand\OneDrive\Documents\packages\solar_system_cartography\dev\solar_system_cartography",
+        #                        name="solar_system.db")
+        # db.insert(self.read())
 
     def __repr__(self) -> str:
         return f"""
@@ -62,6 +67,25 @@ class ObjectInOrbit():
         radius : {self._radius} m
             """
     
+    def read(self) ->dict:
+        return {
+            "name" : self.get_name(),
+            "mass" : self.get_mass(),
+            "rotation_period" : self.get_rotation_period(),
+            "axis_inclination" : self.get_axis_inclination(),
+            "radius" : self.get_radius(),
+            "semi_major_axis" : self.get_semi_major_axis(),
+            "semi_minor_axis" : self.get_semi_minor_axis(),
+            "inclination" : self.get_inclination(),
+            "eccentricity" : self.get_eccentricity(),
+            "period" : self.get_orbital_period(),
+            "circumference" : self.get_orbital_circumference(),
+            "distance_at_perihelion" : self.get_perihelion_distance(),
+            "velocity_at_perihelion" : self.get_perihelion_velocity(),
+            "distance_at_aphelion" : self.get_aphelion_distance(),
+            "velocity_at_aphelion" : self.get_aphelion_velocity()
+        }
+    
     def get_name(self) ->str:
         return self._name
     
@@ -83,8 +107,20 @@ class ObjectInOrbit():
     def get_radius(self) ->float:
         return self._radius
     
+    def get_mass(self) ->float:
+        return self._mass
+    
     def get_orbital_period(self) ->float:
         return self._orbital_period
+    
+    def get_random_perihelion_day(self) ->list:
+        return self._perihelion_day
+    
+    def get_arg_periapsis(self) ->float:
+        return self._arg_periapsis
+    
+    def get_ascending_node(self) ->float:
+        return self._ascending_node
     
     def set_orbital_period(self) ->float:
         """
@@ -158,6 +194,14 @@ class ObjectInOrbit():
         # percentage of covered distance
         return self._orbital_circumference / 100 * (orbital_speed * time)
     
+    def get_days(self) ->int:
+        """Returns the number of days from J2000 to the specified perihelion date.
+        """
+        perihelion_day = self.get_random_perihelion_day()
+        return utils.days_from_j2000(perihelion_day[0],
+                                    perihelion_day[1],
+                                    perihelion_day[2])
+        
     def get_covered_distance_each_day(self) ->dict:
         """Based on the speed at perihelion and aphelion,
         calculate the percentage of circumference covered each day by the object.
@@ -172,18 +216,21 @@ class ObjectInOrbit():
         p_min = 100 * d / self._orbital_circumference
 
         percentage_covered_dist = {} 
-        max_to_min_speed_range = range(0, int(self._orbital_period / 2))
+        max_to_min_speed_range = range(0,
+                                       int(self._orbital_period / 2))
         for key in max_to_min_speed_range:
             transition_value = p_max + (p_min - p_max) * (key - max_to_min_speed_range.start) / (max_to_min_speed_range.stop - 1)
             
             percentage_covered_dist[key] = transition_value
 
-        min_to_max_speed_range = range(int(self._orbital_period / 2), int(self._orbital_period)+2)
+        min_to_max_speed_range = range(int(self._orbital_period / 2),
+                                       int(self._orbital_period)+2)
         for key in min_to_max_speed_range:
             transition_value = p_min + (p_max - p_min) * (key - min_to_max_speed_range.start) / (min_to_max_speed_range.stop - 1)
             
             percentage_covered_dist[key] = transition_value
 
+        print(percentage_covered_dist)
         return percentage_covered_dist
     
 if __name__ == "__main__":

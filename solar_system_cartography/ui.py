@@ -1,8 +1,9 @@
 import sys
 from functools import partial
-from solar_system_cartography.Qt import QtWidgets
+from solar_system_cartography.Qt import QtWidgets, QtGui, QtCore
 from solar_system_cartography.api import ObjectInOrbit
 from solar_system_cartography.envs import PRESETS
+from solar_system_cartography.database import Database
 
 try:
     from solar_system_cartography.rig import Rig
@@ -11,9 +12,24 @@ try:
 except:
     print("Standalone mode")
 
+class CustomTreeItem(QtWidgets.QTreeWidgetItem):
+    def __init__(self, data:list):
+        super(CustomTreeItem, self).__init__()
+        
+        self.setText(0, data[1])
+        self.setText(1, str(data[2]))
+        self.setText(2, str(data[3]))
+        self.setText(3, str(data[4]))
+        self.setText(4, str(data[5]))
+        self.setText(5, str(data[6]))
+        self.setText(6, str(data[7]))
+
 class MainUI(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainUI, self).__init__(parent)
+
+        # self._db = Database(path=r"C:\Users\giand\OneDrive\Documents\packages\solar_system_cartography\dev\solar_system_cartography",
+        #                        name="solar_system.db")
 
         self.setWindowTitle("Cartographer v-dev")
         self.setGeometry(100, 100, 600, 400)
@@ -35,6 +51,8 @@ class MainUI(QtWidgets.QMainWindow):
 
         self.create_connections()
 
+        self.selected_color = QtGui.QColor(1, 1, 1)
+
     def create_first_tab(self) ->None:
         self.first_tab = QtWidgets.QWidget()
         self.first_tab.setLayout(QtWidgets.QVBoxLayout())
@@ -53,7 +71,6 @@ class MainUI(QtWidgets.QMainWindow):
         self.obj_data["mass"] = QtWidgets.QLineEdit()
         self.obj_data["day"] = QtWidgets.QLineEdit()
         self.obj_data["axis_inclination"] = QtWidgets.QLineEdit()
-        self.obj_data["radius"] = QtWidgets.QLineEdit()
         i = 1      
         for lbl,box in self.obj_data.items():
             object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -69,6 +86,10 @@ class MainUI(QtWidgets.QMainWindow):
         self.orb_data["semi_major_axis"] = QtWidgets.QLineEdit()
         self.orb_data["inclination"] = QtWidgets.QLineEdit()
         self.orb_data["eccentricity"] = QtWidgets.QLineEdit()
+        self.orb_data["arg_periapsis"] = QtWidgets.QLineEdit()
+        self.orb_data["ascending_node"] = QtWidgets.QLineEdit()
+        self.orb_data["random_perihelion_day"] = QtWidgets.QDateEdit()
+        self.orb_data["random_perihelion_day"].setDisplayFormat("yyyy, MM, dd")
         i = 1      
         for lbl,box in self.orb_data.items():
             orbital_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -76,6 +97,20 @@ class MainUI(QtWidgets.QMainWindow):
             i += 1
         orbital_group_box.setLayout(orbital_grid_layout)
         self.first_tab.layout().addWidget(orbital_group_box)
+
+        # visualisation grid
+        visu_group_box = QtWidgets.QGroupBox("VISUALISATION SETTINGS")
+        visu_grid_layout = QtWidgets.QGridLayout()
+        self.visu_data = {}
+        self.visu_data["orbit color"] = QtWidgets.QPushButton()
+        # self.visu_data["object texture"] = QtWidgets.QLineEdit()
+        i = 1      
+        for lbl,box in self.visu_data.items():
+            visu_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
+            visu_grid_layout.addWidget(box, i, 1)
+            i += 1
+        visu_group_box.setLayout(visu_grid_layout)
+        self.first_tab.layout().addWidget(visu_group_box)
 
         # create button
         self.create_button = QtWidgets.QPushButton("CREATE")
@@ -85,44 +120,51 @@ class MainUI(QtWidgets.QMainWindow):
     def create_second_tab(self) ->None:
         self.select_tab = QtWidgets.QWidget()
         tree_widget = QtWidgets.QTreeWidget()
-        tree_widget.setColumnCount(5)
-        tree_widget.setHeaderLabels(["Header 1", "Header 2", "Header 3", "Header 4", "Header 5"])
+        tree_widget.setColumnCount(7)
+        tree_widget.setHeaderLabels(["Name", "Mass", "Rotation period", "Axis inclination", "Semi Major Axis", "Inclination", "Eccentricity"])
         
         select_tab_layout = QtWidgets.QVBoxLayout()
         select_tab_layout.addWidget(tree_widget)
         self.select_tab.setLayout(select_tab_layout)
 
+        # for obj in self._db.read() or []:
+        #     item = CustomTreeItem(obj)
+        #     tree_widget.addTopLevelItem(item)
+
     def create_menubar(self):
         self.menu_bar = self.menuBar()
+        
+        self.file_menu = self.menu_bar.addMenu("File")
+        self.new_file_action = QtWidgets.QAction("New file", self)
+        self.open_file_action = QtWidgets.QAction("Open file", self)
+        self.file_menu.addAction(self.new_file_action)
+        self.file_menu.addAction(self.open_file_action)
+
         self.presets_menu = self.menu_bar.addMenu("Presets")
-        self.mercury_action = QtWidgets.QAction("Mercury", self)
-        self.venus_action = QtWidgets.QAction("Venus", self)
-        self.earth_action = QtWidgets.QAction("Earth", self)
-        self.mars_action = QtWidgets.QAction("Mars", self)
-        self.jupiter_action = QtWidgets.QAction("Jupiter", self)
-        self.presets_menu.addAction(self.mercury_action)
-        self.presets_menu.addAction(self.venus_action)
-        self.presets_menu.addAction(self.earth_action)
-        self.presets_menu.addAction(self.mars_action)
-        self.presets_menu.addAction(self.jupiter_action)
+        self.action = {}
+        for obj in ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto", "1P/Halley"]:
+            self.action[obj] = QtWidgets.QAction(obj, self)
+            self.presets_menu.addAction(self.action[obj])
+            self.action[obj].triggered.connect(partial(self.on_preset_triggered, obj))
 
     def create_connections(self) ->None:
         self.create_button.clicked.connect(self.on_create_button_clicked)
-        self.mercury_action.triggered.connect(partial(self.on_preset_triggered, "Mercury"))
-        self.venus_action.triggered.connect(partial(self.on_preset_triggered, "Venus"))
-        self.earth_action.triggered.connect(partial(self.on_preset_triggered, "Earth"))
-        self.mars_action.triggered.connect(partial(self.on_preset_triggered, "Mars"))
-        self.jupiter_action.triggered.connect(partial(self.on_preset_triggered, "Jupiter"))
+        self.visu_data["orbit color"].clicked.connect(self.showColorDialog)
 
     def read(self) ->dict:
+        date = self.orb_data.get("random_perihelion_day").date().toString("yyyy.MM.dd").split(".")
+        date = [int(d) for d in date]
+        
         data = {
             "mass" : float(self.obj_data.get("mass").text()),
             "day" : float(self.obj_data.get("day").text()),
-            "radius" : float(self.obj_data.get("radius").text()),
             "axis_inclination" : float(self.obj_data.get("axis_inclination").text()),
             "semi_major_axis" : float(self.orb_data.get("semi_major_axis").text()),
             "inclination" : float(self.orb_data.get("inclination").text()),
             "eccentricity" : float(self.orb_data.get("eccentricity").text()),
+            "arg_periapsis" : float(self.orb_data.get("arg_periapsis").text()),
+            "ascending_node" : float(self.orb_data.get("ascending_node").text()),
+            "random_perihelion_day" : date
         }
         return data
     
@@ -131,11 +173,24 @@ class MainUI(QtWidgets.QMainWindow):
         self.name_line_edit.setText(name)
         self.obj_data["mass"].setText(str(d["mass"]))
         self.obj_data["day"].setText(str(d["day"]))
-        self.obj_data["radius"].setText(str(d["radius"]))
         self.obj_data["axis_inclination"].setText(str(d["axis_inclination"]))
         self.orb_data["semi_major_axis"].setText(str(d["semi_major_axis"]))
         self.orb_data["inclination"].setText(str(d["inclination"]))
         self.orb_data["eccentricity"].setText(str(d["eccentricity"]))
+        self.orb_data["arg_periapsis"].setText(str(d["arg_periapsis"]))
+        self.orb_data["ascending_node"].setText(str(d["ascending_node"]))
+        q_date = QtCore.QDate(d["random_perihelion_day"][0],
+                              d["random_perihelion_day"][1],
+                              d["random_perihelion_day"][2])
+        self.orb_data["random_perihelion_day"].setDate(q_date) 
+
+    def showColorDialog(self):
+        color = QtWidgets.QColorDialog.getColor(initial=self.selected_color)
+
+        if color.isValid():
+            print(f"{color.red()}, {color.green()}, {color.blue()}")
+            self.selected_color = color
+            self.visu_data["orbit color"].setStyleSheet(f"background-color: {color.name()};")
 
     def on_create_button_clicked(self) ->None:
         d = self.read()
@@ -145,8 +200,10 @@ class MainUI(QtWidgets.QMainWindow):
                             inclination=d["inclination"],
                             eccentricity=d["eccentricity"],
                             rotation_period=d["day"],
+                            arg_periapsis=d["arg_periapsis"],
+                            ascending_node=d["ascending_node"],
                             axis_inclination=d["axis_inclination"],
-                            object_radius=d["radius"])
+                            random_perihelion_day=d["random_perihelion_day"])
         print(obj)
         # try:
         rig = Rig(obj)
