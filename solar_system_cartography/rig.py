@@ -1,13 +1,19 @@
 from maya import cmds
 import math
-from solar_system_cartography.api import ObjectInOrbit
-from solar_system_cartography import envs, utils
+from solar_system_cartography.api import ObjectInOrbit, Star
+from solar_system_cartography import envs
 
 class Rig():
-    def __init__(self, obj:ObjectInOrbit, create_sun:bool=True) ->None:
+    def __init__(self, obj:ObjectInOrbit, star:Star=None) ->None:
         self._obj = obj
         self._name = obj.get_name()
-        self.build()
+        if star:
+            self._star = star
+        if not cmds.objExists(f"{self._name}_group"):
+            self.build()
+        else:
+            print(f"{self._name} already exists in the scene.")
+            return
 
     def get_inclination(self) ->float:
         """Converts the inclination of an orbit in maya units.
@@ -47,6 +53,16 @@ class Rig():
         if not cmds.objExists(name):
             cmds.spaceLocator(n=name)[0]
         return name
+    
+    def cr_star(self, barycenter:str) ->str:
+        name = self._star.get_name()
+        control_name = f"{name}_control"
+        if not cmds.objExists(control_name):
+            control = cmds.spaceLocator(n=control_name)[0]
+            obj = cmds.polySphere(n=f"{name}_geo", radius=0.5)[0]
+            cmds.parent(control, barycenter)
+            cmds.parent(obj, control)
+        return control_name
 
     def cr_orbit(self) ->str:
         """Creates the orbit of the object
@@ -121,7 +137,13 @@ class Rig():
 
     def cstr_orbit_barycenter(self, orbit:str, barycenter:str) ->None:
         cmds.connectAttr(f"{barycenter}.worldMatrix[0]", f"{orbit}.offsetParentMatrix", f=True)
-    
+
+    def cstr_star_obj(self, star:str, obj:str) ->None:
+        cmds.parentConstraint(obj,
+                              star,
+                              mo=False,
+                              w=self._star.get_object_influence(self._obj.get_mass()))
+
     def get_distances(orbit:str) ->dict:
         barycenter_pos = [0.0, 0.0, 0.0]
         positions = {}
@@ -175,6 +197,10 @@ class Rig():
 
         poc = self.cstr_offset_orbit(orbit, offset)
         self.cstr_orbit_barycenter(orbit, barycenter)
+
+        if self._star:
+            star_control = self.cr_star(barycenter)
+            self.cstr_star_obj(star_control, control)
 
         self.anim_orbit(poc)
         self.anim_offset(control, offset)

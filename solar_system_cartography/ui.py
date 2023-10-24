@@ -42,10 +42,10 @@ class MainUI(QtWidgets.QMainWindow):
         self.create_menubar()
 
         self.tab_widget = QtWidgets.QTabWidget()
-        self.create_first_tab()
-        self.create_second_tab()
+        self.objects_creation_tab()
+        self.objects_vis_tab()
 
-        self.tab_widget.addTab(self.first_tab, "CREATE")
+        self.tab_widget.addTab(self.creation_tab, "CREATE")
         self.tab_widget.addTab(self.select_tab, "SELECT")
         self._layout.addWidget(self.tab_widget)
 
@@ -53,17 +53,43 @@ class MainUI(QtWidgets.QMainWindow):
 
         self.selected_color = QtGui.QColor(1, 1, 1)
 
-    def create_first_tab(self) ->None:
-        self.first_tab = QtWidgets.QWidget()
-        self.first_tab.setLayout(QtWidgets.QVBoxLayout())
+    def objects_creation_tab(self) ->None:
+        self.creation_tab = QtWidgets.QWidget()
+        self.creation_tab.setLayout(QtWidgets.QVBoxLayout())
+
+        # root
+        root_layout = QtWidgets.QHBoxLayout()
+        root_label = QtWidgets.QLabel("Project Directory")
+        self.root_line_edit = QtWidgets.QLineEdit()
+        self.set_project_button = QtWidgets.QPushButton("Set Project")
+        root_layout.addWidget(root_label)
+        root_layout.addWidget(self.root_line_edit)
+        root_layout.addWidget(self.set_project_button)
+        self.creation_tab.layout().addLayout(root_layout)
+
+        # parent box
+        self.parent_box = QtWidgets.QComboBox()
+        self.creation_tab.layout().addWidget(self.parent_box)
+        # type box
+        self.type_box = QtWidgets.QComboBox()
+        self.type_box.addItems(["Object", "Star"])
+        self.creation_tab.layout().addWidget(self.type_box)
         
-        name_layout = QtWidgets.QHBoxLayout()
-        name_lbl = QtWidgets.QLabel("Name")
-        self.name_line_edit = QtWidgets.QLineEdit()
-        name_layout.addWidget(name_lbl)
-        name_layout.addWidget(self.name_line_edit)
-        self.first_tab.layout().addLayout(name_layout)
-        
+        # global grid
+        glob_group_box = QtWidgets.QGroupBox("GLOBAL")
+        object_grid_layout = QtWidgets.QGridLayout()
+        self.glob_data = {}
+        self.glob_data["name"] = QtWidgets.QLineEdit()
+        self.glob_data["type"] = self.type_box
+        self.glob_data["parent"] = self.parent_box
+        i = 1      
+        for lbl,box in self.glob_data.items():
+            object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
+            object_grid_layout.addWidget(box, i, 1)
+            i += 1
+        glob_group_box.setLayout(object_grid_layout)
+        self.creation_tab.layout().addWidget(glob_group_box)
+
         # object grid
         object_group_box = QtWidgets.QGroupBox("PHYSICAL CHARACTERISTICS")
         object_grid_layout = QtWidgets.QGridLayout()
@@ -77,7 +103,7 @@ class MainUI(QtWidgets.QMainWindow):
             object_grid_layout.addWidget(box, i, 1)
             i += 1
         object_group_box.setLayout(object_grid_layout)
-        self.first_tab.layout().addWidget(object_group_box)
+        self.creation_tab.layout().addWidget(object_group_box)
 
         # orbital grid
         orbital_group_box = QtWidgets.QGroupBox("ORBITAL CHARACTERISTICS")
@@ -96,7 +122,7 @@ class MainUI(QtWidgets.QMainWindow):
             orbital_grid_layout.addWidget(box, i, 1)
             i += 1
         orbital_group_box.setLayout(orbital_grid_layout)
-        self.first_tab.layout().addWidget(orbital_group_box)
+        self.creation_tab.layout().addWidget(orbital_group_box)
 
         # visualisation grid
         visu_group_box = QtWidgets.QGroupBox("VISUALISATION SETTINGS")
@@ -110,14 +136,14 @@ class MainUI(QtWidgets.QMainWindow):
             visu_grid_layout.addWidget(box, i, 1)
             i += 1
         visu_group_box.setLayout(visu_grid_layout)
-        self.first_tab.layout().addWidget(visu_group_box)
+        self.creation_tab.layout().addWidget(visu_group_box)
 
         # create button
         self.create_button = QtWidgets.QPushButton("CREATE")
-        self.first_tab.layout().addWidget(self.create_button)
-        self.first_tab.layout().addStretch(1)
+        self.creation_tab.layout().addWidget(self.create_button)
+        self.creation_tab.layout().addStretch(1)
 
-    def create_second_tab(self) ->None:
+    def objects_vis_tab(self) ->None:
         self.select_tab = QtWidgets.QWidget()
         tree_widget = QtWidgets.QTreeWidget()
         tree_widget.setColumnCount(7)
@@ -170,7 +196,7 @@ class MainUI(QtWidgets.QMainWindow):
     
     def on_preset_triggered(self, name) ->None:
         d = PRESETS.get(name)
-        self.name_line_edit.setText(name)
+        self.glob_data["name"].setText(name)
         self.obj_data["mass"].setText(str(d["mass"]))
         self.obj_data["day"].setText(str(d["day"]))
         self.obj_data["axis_inclination"].setText(str(d["axis_inclination"]))
@@ -194,7 +220,7 @@ class MainUI(QtWidgets.QMainWindow):
 
     def on_create_button_clicked(self) ->None:
         d = self.read()
-        obj = ObjectInOrbit(object_name=self.name_line_edit.text(),
+        obj = ObjectInOrbit(object_name=self.glob_data["name"].text(),
                             object_mass=d["mass"],
                             semi_major_axis=d["semi_major_axis"],
                             inclination=d["inclination"],
