@@ -148,55 +148,8 @@ class Rig():
             if d == min_distance:
                 return i
             
-    # def anim_orbit(self, poc:str) ->None:
-    #     # animation along the orbit
-    #     values_to_key = {}
-    #     total_v = 0
-    #     start = self._obj.get_days()
-    #     values_to_key[str(start)] = total_v
-    #     for t, v in self._obj.get_covered_distance_each_day().items():
-    #         total_v += v
-    #         values_to_key[t+start+1] = total_v
-            
-    #     for t, v in values_to_key.items():
-    #         if v >= 100:
-    #             break
-    #         cmds.setKeyframe(f"{poc}.parameter", v=v, t=t)
-
-    #     cmds.keyTangent(f"{poc}.parameter", itt="spline", ott="spline")
-    #     cmds.setInfinity(f"{poc}.parameter", pri="cycle", poi="cycle")
-
     def anim_orbit(self, poc:str) ->None:
-        a = self._obj.get_semi_major_axis() * envs.AU
-        b = self._obj.get_semi_minor_axis() * envs.AU
-        av = self._obj.get_perihelion_velocity()
-        bv = self._obj.get_aphelion_velocity()
-        period = self._obj.get_orbital_period()
-        c = self._obj.get_orbital_circumference()
-
-        period_p = int(0.01 * period)
-
-        ad = av * 3600 * period_p
-        bd = bv * 3600 * period_p
-
-        adp = ad / c * 100
-        bdp = bd / c * 100
-
-        # keys = {
-        #     # keyframe : percentage
-        #     0 : 0,
-        #     period_p : adp,
-        #     int(period)/2 : 50,
-        #     int(period)/2 + period_p : 50 + bdp,
-        #     int(period) - period_p : 100 - adp
-        # }
-        keys = {
-            0 : 0,
-            int(period)/2 : 50,
-            int(period) : 100
-        }
-
-        for t, v in keys.items():
+        for t, v in self._obj.get_covered_distance_each_day().items():
             print(t, v)
             cmds.setKeyframe(f"{poc}.parameter", v=v, t=t)
 

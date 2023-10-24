@@ -72,14 +72,14 @@
         "eccentricity" : 0.25024871
     },
     "1P/Halley" : {
-        "semi_major_axis" : 17.9,
-        "inclination" : 162.238,
-        "eccentricity" : 0.96727,
+        "semi_major_axis" : 17.872265,
+        "inclination" : 162.2239,
+        "eccentricity" : 0.966321,
         "mass" : 2.2e14,
         "day" : 1,
         "axis_inclination" : 0,
         "random_perihelion_day" : [1986,2,9],
-        "ascending_node" : 58,
-        "arg_periapsis" : 111.8
+        "ascending_node" : 58.9763,
+        "arg_periapsis" : 111.9047
     }
 }
