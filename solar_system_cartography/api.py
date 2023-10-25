@@ -1,6 +1,6 @@
 import math
 from solar_system_cartography import envs, utils
-from solar_system_cartography.database_json import Database
+from solar_system_cartography.database import Database
 
 class Star():
     def __init__(self, name:str, mass:str) -> None:
@@ -84,17 +84,19 @@ class ObjectInOrbit():
             "mass" : self.get_mass(),
             "rotation_period" : self.get_rotation_period(),
             "axis_inclination" : self.get_axis_inclination(),
-            "radius" : self.get_radius(),
             "semi_major_axis" : self.get_semi_major_axis(),
             "semi_minor_axis" : self.get_semi_minor_axis(),
             "inclination" : self.get_inclination(),
             "eccentricity" : self.get_eccentricity(),
             "period" : self.get_orbital_period(),
+            "ascending_node" : self.get_ascending_node(),
+            "arg_periapsis" : self.get_arg_periapsis(),
             "circumference" : self.get_orbital_circumference(),
             "distance_at_perihelion" : self.get_perihelion_distance(),
             "velocity_at_perihelion" : self.get_perihelion_velocity(),
             "distance_at_aphelion" : self.get_aphelion_distance(),
-            "velocity_at_aphelion" : self.get_aphelion_velocity()
+            "velocity_at_aphelion" : self.get_aphelion_velocity(),
+            "perihelion_day" : self.get_random_perihelion_day()
         }
     
     def get_name(self) ->str:

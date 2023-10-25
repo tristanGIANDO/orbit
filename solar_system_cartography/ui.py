@@ -3,7 +3,7 @@ from functools import partial
 from solar_system_cartography.Qt import QtWidgets, QtGui, QtCore
 from solar_system_cartography.api import ObjectInOrbit
 from solar_system_cartography.envs import PRESETS
-from solar_system_cartography.database_json import Database
+from solar_system_cartography.database import Database
 
 try:
     from solar_system_cartography.rig import Rig
@@ -15,11 +15,12 @@ except:
 class CustomTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, data:dict):
         super(CustomTreeItem, self).__init__()
+        if not data:
+            return
         self._obj = data
-        self.setText(0, data["name"])
-        self.setText(1, str(data["mass"]))
-        self.setText(2, str(data["rotation_period"]))
-        self.setText(3, str(data["axis_inclination"]))
+        for i in range(16):
+            self.setText(i, str(data[i+1]))
+
 class MainUI(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainUI, self).__init__(parent)
@@ -140,8 +141,25 @@ class MainUI(QtWidgets.QMainWindow):
     def objects_vis_tab(self) ->None:
         self.select_tab = QtWidgets.QWidget()
         self.tree = QtWidgets.QTreeWidget()
-        self.tree.setColumnCount(7)
-        self.tree.setHeaderLabels(["Name", "Mass", "Rotation period", "Axis inclination", "Semi Major Axis", "Inclination", "Eccentricity"])
+        self.tree.setColumnCount(17)
+        self.tree.setHeaderLabels(["Name",
+                                   "Mass",
+                                   "Rotation Period",
+                                   "Axis Inclination",
+                                   "Semi Major Axis",
+                                   "Semi Minor Axis",
+                                   "Inclination",
+                                   "Eccentricity",
+                                   "Period",
+                                   "Ascending Node",
+                                   "Periapsis Argument",
+                                   "Circumference",
+                                   "Perihelion Distance",
+                                   "Perihelion Speed",
+                                   "Aphelion Distance",
+                                   "Aphelion Speed",
+                                   "Perihelion Date"
+                                   ])
         
         select_tab_layout = QtWidgets.QVBoxLayout()
         select_tab_layout.addWidget(self.tree)
@@ -149,10 +167,11 @@ class MainUI(QtWidgets.QMainWindow):
 
     def reload_tree(self) ->None:
         objects = self._db.read()
+        print(objects)
         if not objects:
             return
-        objects.pop("project_path")
-        for obj in list(objects.values()):
+  
+        for obj in objects or []:
             item = CustomTreeItem(obj)
             self.tree.addTopLevelItem(item)
 
