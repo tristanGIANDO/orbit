@@ -13,17 +13,13 @@ except:
     print("Standalone mode")
 
 class CustomTreeItem(QtWidgets.QTreeWidgetItem):
-    def __init__(self, data:list):
+    def __init__(self, data:dict):
         super(CustomTreeItem, self).__init__()
-        
-        self.setText(0, data[1])
-        self.setText(1, str(data[2]))
-        self.setText(2, str(data[3]))
-        self.setText(3, str(data[4]))
-        self.setText(4, str(data[5]))
-        self.setText(5, str(data[6]))
-        self.setText(6, str(data[7]))
-
+        self._obj = data
+        self.setText(0, data["name"])
+        self.setText(1, str(data["mass"]))
+        self.setText(2, str(data["rotation_period"]))
+        self.setText(3, str(data["axis_inclination"]))
 class MainUI(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainUI, self).__init__(parent)
@@ -152,7 +148,11 @@ class MainUI(QtWidgets.QMainWindow):
         self.select_tab.setLayout(select_tab_layout)
 
     def reload_tree(self) ->None:
-        for obj in self._db.read() or []:
+        objects = self._db.read()
+        if not objects:
+            return
+        objects.pop("project_path")
+        for obj in list(objects.values()):
             item = CustomTreeItem(obj)
             self.tree.addTopLevelItem(item)
 
@@ -232,6 +232,7 @@ class MainUI(QtWidgets.QMainWindow):
             self._project_path = project_path
             self.root_project_line_edit.setText(project_path)
             self._db = Database(project_path)
+            self.reload_tree()
 
     def on_create_button_clicked(self) ->None:
         self.build_rig()
@@ -249,6 +250,8 @@ class MainUI(QtWidgets.QMainWindow):
                             ascending_node=d["ascending_node"],
                             axis_inclination=d["axis_inclination"],
                             random_perihelion_day=d["random_perihelion_day"])
+        
+        self.reload_tree()
         try:
             rig = Rig(obj, self._maya_data)
         except:
