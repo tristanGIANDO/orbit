@@ -3,7 +3,7 @@ from functools import partial
 from solar_system_cartography.Qt import QtWidgets, QtGui, QtCore
 from solar_system_cartography.api import ObjectInOrbit
 from solar_system_cartography.envs import PRESETS
-from solar_system_cartography.database import Database
+from solar_system_cartography.database_json import Database
 
 try:
     from solar_system_cartography.rig import Rig
@@ -28,8 +28,7 @@ class MainUI(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainUI, self).__init__(parent)
 
-        # self._db = Database(path=r"C:\Users\giand\OneDrive\Documents\packages\solar_system_cartography\dev\solar_system_cartography",
-        #                        name="solar_system.db")
+        self._db = None
 
         self.setWindowTitle("Cartographer v-dev")
         self.setGeometry(100, 100, 600, 400)
@@ -40,6 +39,15 @@ class MainUI(QtWidgets.QMainWindow):
         central_widget.setLayout(self._layout)
 
         self.create_menubar()
+
+        # root
+        root_layout = QtWidgets.QHBoxLayout()
+        self.root_project_line_edit = QtWidgets.QLineEdit()
+        self.root_project_line_edit.setPlaceholderText("Project Directory")
+        self.set_project_button = QtWidgets.QPushButton("Set Project")
+        root_layout.addWidget(self.root_project_line_edit)
+        root_layout.addWidget(self.set_project_button)
+        central_widget.layout().addLayout(root_layout)
 
         self.tab_widget = QtWidgets.QTabWidget()
         self.objects_creation_tab()
@@ -57,17 +65,6 @@ class MainUI(QtWidgets.QMainWindow):
     def objects_creation_tab(self) ->None:
         self.creation_tab = QtWidgets.QWidget()
         self.creation_tab.setLayout(QtWidgets.QVBoxLayout())
-
-        # root
-        root_layout = QtWidgets.QHBoxLayout()
-        root_label = QtWidgets.QLabel("Project Directory")
-        self.root_line_edit = QtWidgets.QLineEdit()
-        self.set_project_button = QtWidgets.QPushButton("Set Project")
-        root_layout.addWidget(root_label)
-        root_layout.addWidget(self.root_line_edit)
-        root_layout.addWidget(self.set_project_button)
-        self.creation_tab.layout().addLayout(root_layout)
-
         # parent box
         self.parent_box = QtWidgets.QComboBox()
         self.creation_tab.layout().addWidget(self.parent_box)
@@ -146,17 +143,18 @@ class MainUI(QtWidgets.QMainWindow):
 
     def objects_vis_tab(self) ->None:
         self.select_tab = QtWidgets.QWidget()
-        tree_widget = QtWidgets.QTreeWidget()
-        tree_widget.setColumnCount(7)
-        tree_widget.setHeaderLabels(["Name", "Mass", "Rotation period", "Axis inclination", "Semi Major Axis", "Inclination", "Eccentricity"])
+        self.tree = QtWidgets.QTreeWidget()
+        self.tree.setColumnCount(7)
+        self.tree.setHeaderLabels(["Name", "Mass", "Rotation period", "Axis inclination", "Semi Major Axis", "Inclination", "Eccentricity"])
         
         select_tab_layout = QtWidgets.QVBoxLayout()
-        select_tab_layout.addWidget(tree_widget)
+        select_tab_layout.addWidget(self.tree)
         self.select_tab.setLayout(select_tab_layout)
 
-        # for obj in self._db.read() or []:
-        #     item = CustomTreeItem(obj)
-        #     tree_widget.addTopLevelItem(item)
+    def reload_tree(self) ->None:
+        for obj in self._db.read() or []:
+            item = CustomTreeItem(obj)
+            self.tree.addTopLevelItem(item)
 
     def create_menubar(self):
         self.menu_bar = self.menuBar()
@@ -175,8 +173,9 @@ class MainUI(QtWidgets.QMainWindow):
             self.action[obj].triggered.connect(partial(self.on_preset_triggered, obj))
 
     def create_connections(self) ->None:
+        self.set_project_button.clicked.connect(self.show_project_dialog)
         self.create_button.clicked.connect(self.on_create_button_clicked)
-        self.visu_data["orbit color"].clicked.connect(self.showColorDialog)
+        self.visu_data["orbit color"].clicked.connect(self.show_color_dialog)
 
     def read(self) ->dict:
         date = self.orb_data.get("random_perihelion_day").date().toString("yyyy.MM.dd").split(".")
@@ -211,7 +210,7 @@ class MainUI(QtWidgets.QMainWindow):
                               d["random_perihelion_day"][2])
         self.orb_data["random_perihelion_day"].setDate(q_date) 
 
-    def showColorDialog(self):
+    def show_color_dialog(self):
         color = QtWidgets.QColorDialog.getColor(initial=self.selected_color)
 
         if color.isValid():
@@ -220,9 +219,27 @@ class MainUI(QtWidgets.QMainWindow):
             # add to general dict
             self._maya_data["orbit_color"] = [color.red()/255,color.green()/255,color.blue()/255]
 
+    def show_project_dialog(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.ShowDirsOnly
+
+        project_path = QtWidgets.QFileDialog.getExistingDirectory(self,
+                                                                 "Set Project Directory",
+                                                                 "",
+                                                                 options=options)
+
+        if project_path:
+            self._project_path = project_path
+            self.root_project_line_edit.setText(project_path)
+            self._db = Database(project_path)
+
     def on_create_button_clicked(self) ->None:
+        self.build_rig()
+    
+    def build_rig(self) ->None:
         d = self.read()
-        obj = ObjectInOrbit(object_name=self.glob_data["name"].text(),
+        obj = ObjectInOrbit(project_path=self._project_path,
+                            object_name=self.glob_data["name"].text(),
                             object_mass=d["mass"],
                             semi_major_axis=d["semi_major_axis"],
                             inclination=d["inclination"],
@@ -232,11 +249,10 @@ class MainUI(QtWidgets.QMainWindow):
                             ascending_node=d["ascending_node"],
                             axis_inclination=d["axis_inclination"],
                             random_perihelion_day=d["random_perihelion_day"])
-        print(obj)
-        # try:
-        rig = Rig(obj, self._maya_data)
-        # except:
-        #     print("Visualisation available in Maya only")
+        try:
+            rig = Rig(obj, self._maya_data)
+        except:
+            print("Visualisation available in Maya only")
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()

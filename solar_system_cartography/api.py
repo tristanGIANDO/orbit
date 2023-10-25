@@ -1,5 +1,6 @@
 import math
-from solar_system_cartography import envs, utils, database
+from solar_system_cartography import envs, utils
+from solar_system_cartography.database_json import Database
 
 class Star():
     def __init__(self, name:str, mass:str) -> None:
@@ -13,7 +14,7 @@ class Star():
         return object_mass / self._mass * 100
 
 class ObjectInOrbit():
-    def __init__(self, object_name:str, object_mass:float, semi_major_axis:float,
+    def __init__(self, project_path:str, object_name:str, object_mass:float, semi_major_axis:float,
                  inclination:float, eccentricity:float, rotation_period:float,
                  axis_inclination:float, ascending_node:float, arg_periapsis:float, object_radius:float=0.05,
                  attraction_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1]) -> None:
@@ -49,9 +50,8 @@ class ObjectInOrbit():
         self._aphelion_distance = self.set_aphelion_distance()
         self._aphelion_velocity = self.set_aphelion_velocity()
 
-        # db = database.Database(path=r"C:\Users\giand\OneDrive\Documents\packages\solar_system_cartography\dev\solar_system_cartography",
-        #                        name="solar_system.db")
-        # db.insert(self.read())
+        db = Database(project_path)
+        db.insert_object(self.read())
 
     def __repr__(self) -> str:
         return f"""
