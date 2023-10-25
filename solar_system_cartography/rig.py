@@ -10,6 +10,11 @@ class Rig():
 
         self._star = star
         self._maya = maya_data
+
+        # not used yet
+        self._group = f"{self._name}_group"
+        self._offset = f"{self._name}_orbit_offset"
+        self._control = f"{self._name}_control"
         
         self.build() # rebuilds too
 
@@ -133,10 +138,10 @@ class Rig():
         cmds.matchTransform(obj, control)
         return obj
 
-    def cr_annotation(self, control:str) ->str:
-        shape = cmds.annotate(control, tx=self._name, p=(0, .5, .5) )
+    def cr_annotation(self, offset:str) ->str:
+        shape = cmds.annotate(offset, tx=self._name, p=(0, .5, .5) )
         transform = cmds.listRelatives(shape, p=True)[0]
-        cmds.parent(transform,control)
+        cmds.parent(transform,offset)
 
         # color
         color = [1,1,1]
@@ -221,7 +226,7 @@ class Rig():
         offset = self.cr_offset()
         control = self.cr_control(offset)
         geo = self.cr_geo(control)
-        self.cr_annotation(control)
+        self.cr_annotation(offset)
         group = self.cr_hierarchy(orbit,offset)
 
         poc = self.cstr_offset_orbit(orbit, offset)
