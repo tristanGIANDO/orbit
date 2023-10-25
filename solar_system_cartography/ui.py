@@ -52,6 +52,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.create_connections()
 
         self.selected_color = QtGui.QColor(1, 1, 1)
+        self._maya_data = {} # to use for specific settings (color, textures...)
 
     def objects_creation_tab(self) ->None:
         self.creation_tab = QtWidgets.QWidget()
@@ -214,9 +215,10 @@ class MainUI(QtWidgets.QMainWindow):
         color = QtWidgets.QColorDialog.getColor(initial=self.selected_color)
 
         if color.isValid():
-            print(f"{color.red()}, {color.green()}, {color.blue()}")
             self.selected_color = color
             self.visu_data["orbit color"].setStyleSheet(f"background-color: {color.name()};")
+            # add to general dict
+            self._maya_data["orbit_color"] = [color.red()/255,color.green()/255,color.blue()/255]
 
     def on_create_button_clicked(self) ->None:
         d = self.read()
@@ -232,7 +234,7 @@ class MainUI(QtWidgets.QMainWindow):
                             random_perihelion_day=d["random_perihelion_day"])
         print(obj)
         # try:
-        rig = Rig(obj)
+        rig = Rig(obj, self._maya_data)
         # except:
         #     print("Visualisation available in Maya only")
 

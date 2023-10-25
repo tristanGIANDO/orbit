@@ -4,16 +4,14 @@ from solar_system_cartography.api import ObjectInOrbit, Star
 from solar_system_cartography import envs
 
 class Rig():
-    def __init__(self, obj:ObjectInOrbit, star:Star=None) ->None:
+    def __init__(self, obj:ObjectInOrbit, maya_data:dict=None, star:Star=None) ->None:
         self._obj = obj
         self._name = obj.get_name()
-        if star:
-            self._star = star
-        if not cmds.objExists(f"{self._name}_group"):
-            self.build()
-        else:
-            print(f"{self._name} already exists in the scene.")
-            return
+
+        self._star = star
+        self._maya = maya_data
+        
+        self.build() # rebuilds too
 
     def get_inclination(self) ->float:
         """Converts the inclination of an orbit in maya units.
@@ -103,6 +101,15 @@ class Rig():
         cmds.setAttr(f"{orbit}.rotateY", self._obj.get_arg_periapsis())
         cmds.setAttr(f"{offset}.rotateY", self._obj.get_ascending_node())
 
+        # color orbit
+        color = [1,1,1]
+        if self._maya:
+            color = self._maya["orbit_color"]
+        shape = cmds.listRelatives(orbit, s=True)[0]
+        cmds.setAttr(f"{shape}.overrideEnabled", True)
+        cmds.setAttr(f"{shape}.overrideRGBColors", True)
+        cmds.setAttr(f"{shape}.overrideColorRGB", *color)
+
         return orbit
 
     def cr_hierarchy(self, orbit:str, offset:str) ->str:
@@ -121,10 +128,23 @@ class Rig():
         return control
 
     def cr_geo(self, control:str) ->str:
-        obj = cmds.polySphere(n=f"{self._name}_geo", radius=0.5)[0]
+        obj = cmds.polySphere(n=f"{self._name}_geo", radius=0.05)[0]
         cmds.parent(obj,control)
         cmds.matchTransform(obj, control)
         return obj
+
+    def cr_annotation(self, control:str) ->str:
+        shape = cmds.annotate(control, tx=self._name, p=(0, .5, .5) )
+        transform = cmds.listRelatives(shape, p=True)[0]
+        cmds.parent(transform,control)
+
+        # color
+        color = [1,1,1]
+        if self._maya:
+            color = self._maya["orbit_color"]
+        cmds.setAttr(f"{shape}.overrideEnabled", True)
+        cmds.setAttr(f"{shape}.overrideRGBColors", True)
+        cmds.setAttr(f"{shape}.overrideColorRGB", *color)
 
     def cstr_offset_orbit(self, orbit_name:str, offset_name):
         poc = cmds.createNode("pointOnCurveInfo", n=f"{self._name}_POC")
@@ -187,12 +207,21 @@ class Rig():
         cmds.keyTangent(f"{control}.rotateY", itt="spline", ott="spline")
         cmds.setInfinity(f"{control}.rotateY", pri="cycle", poi="cycle")
 
+    def delete(self) ->None:
+        main_group = f"{self._name}_group"
+        if cmds.objExists(main_group):
+            cmds.delete(main_group)
+
     def build(self) ->None:
+        # delete the old one if exists
+        self.delete()
+        # create new one
         barycenter = self.cr_barycenter()
         orbit = self.cr_orbit()
         offset = self.cr_offset()
         control = self.cr_control(offset)
         geo = self.cr_geo(control)
+        self.cr_annotation(control)
         group = self.cr_hierarchy(orbit,offset)
 
         poc = self.cstr_offset_orbit(orbit, offset)
