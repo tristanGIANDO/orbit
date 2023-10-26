@@ -6,7 +6,8 @@ from solar_system_cartography import envs
 class Rig():
     def __init__(self, obj:ObjectInOrbit, maya_data:dict=None, star:Star=None) ->None:
         self._obj = obj
-        self._name = obj.get_name()
+        self._name = self.conform_name()
+        
 
         self._star = star
         self._maya = maya_data
@@ -17,6 +18,17 @@ class Rig():
         self._control = f"{self._name}_control"
         
         self.build() # rebuilds too
+
+    def conform_name(self) ->str:
+        "Removes all invalid characters from name"
+        name = self._obj.get_name()
+        if "/" in name:
+            name = name.replace("/","_")
+        for i in range(0,9):
+            if name.startswith(str(i)):
+                name = name.replace(str(i),"")
+
+        return name
 
     def get_inclination(self) ->float:
         """Converts the inclination of an orbit in maya units.
@@ -92,6 +104,7 @@ class Rig():
                             tol=0.01,
                             s=100,
                             n=f"{self._name}_orbit")[0]
+
         cmds.parent(orbit, offset)
 
         # set size
@@ -114,6 +127,8 @@ class Rig():
         cmds.setAttr(f"{shape}.overrideEnabled", True)
         cmds.setAttr(f"{shape}.overrideRGBColors", True)
         cmds.setAttr(f"{shape}.overrideColorRGB", *color)
+
+        print("created", orbit)
 
         return orbit
 
@@ -212,9 +227,10 @@ class Rig():
         cmds.setInfinity(f"{control}.rotateY", pri="cycle", poi="cycle")
 
     def delete(self) ->None:
-        main_group = f"{self._name}_group"
-        if cmds.objExists(main_group):
-            cmds.delete(main_group)
+        for node in [self._group, self._offset, self._control]:
+            if cmds.objExists(node):
+                cmds.delete(node)
+                print("deleted_node")
 
     def build(self) ->None:
         # delete the old one if exists

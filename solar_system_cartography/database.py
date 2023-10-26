@@ -5,13 +5,16 @@ class Database():
         self._path = project_path
         self._name = os.path.basename(self._path)
 
-        self._db = sqlite3.connect(os.path.join(self._path, f"{self._name}.db"))
+        self._db = self.connect()
         self._cursor = self._db.cursor()
 
         self.create()
 
+    def connect(self):
+        return sqlite3.connect(os.path.join(self._path, f"{self._name}.db"))
+
     def _row_exists(self, row_id:str) ->bool:
-        for file in self.select_rows():
+        for file in self.read():
             if file[0] == row_id:
                 return True
             
@@ -90,7 +93,6 @@ class Database():
                 )
 
         self._db.commit()
-        self._db.close()
 
     def read(self):
         self._cursor.execute(f"SELECT * FROM {self._name}")
@@ -108,3 +110,6 @@ class Database():
             self._db.commit()
         except:
             pass
+
+    def close(self) ->None:
+        self._db.close()

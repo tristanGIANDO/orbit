@@ -167,6 +167,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.select_tab.setLayout(select_tab_layout)
 
     def reload_tree(self) ->None:
+        self.tree.clear()
         objects = self._db.read()
         if not objects:
             return
