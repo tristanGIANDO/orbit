@@ -24,6 +24,7 @@ class Database():
                 (
                     [id] INT AUTO_INCREMENT PRIMARY KEY,
                     [name] TEXT,
+                    [type] TEXT,
                     [mass] REAL,
                     [rotation_period] REAL,
                     [axis_inclination] REAL,
@@ -52,6 +53,7 @@ class Database():
                 INSERT INTO {self._name}
                 (
                     name,
+                    type,
                     mass,
                     rotation_period,
                     axis_inclination,
@@ -71,8 +73,9 @@ class Database():
                 )
 
                 VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """, (object_name,
+                      data["type"],
                       data["mass"],
                       data["rotation_period"],
                       data["axis_inclination"],

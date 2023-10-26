@@ -14,10 +14,10 @@ class Star():
         return object_mass / self._mass * 100
 
 class ObjectInOrbit():
-    def __init__(self, project_path:str, object_name:str, object_mass:float, semi_major_axis:float,
+    def __init__(self, project_path:str, object_name:str, object_type:str, object_mass:float, semi_major_axis:float,
                  inclination:float, eccentricity:float, rotation_period:float,
                  axis_inclination:float, ascending_node:float, arg_periapsis:float, object_radius:float=0.05,
-                 attraction_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1], insert_in_database:bool=True) -> None:
+                 attraction_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1]) -> None:
         
         if not object_name:
             raise RuntimeError("What is the name of the object ? Specify 'object_name'")
@@ -31,6 +31,7 @@ class ObjectInOrbit():
             raise RuntimeError("Need the rotation period (day)")
         
         self._name = object_name
+        self._type = object_type
         self._semi_major_axis = semi_major_axis
         self._inclination = inclination
         self._eccentricity = eccentricity
@@ -50,10 +51,8 @@ class ObjectInOrbit():
         self._aphelion_distance = self.set_aphelion_distance()
         self._aphelion_velocity = self.set_aphelion_velocity()
 
-        
-        if insert_in_database:
-            db = Database(project_path)
-            db.insert_object(self.read())
+        db = Database(project_path)
+        db.insert_object(self.read())
 
     def __repr__(self) -> str:
         return f"""
@@ -83,6 +82,7 @@ class ObjectInOrbit():
     def read(self) ->dict:
         return {
             "name" : self.get_name(),
+            "type" : self.get_type(),
             "mass" : self.get_mass(),
             "rotation_period" : self.get_rotation_period(),
             "axis_inclination" : self.get_axis_inclination(),
@@ -103,6 +103,9 @@ class ObjectInOrbit():
     
     def get_name(self) ->str:
         return self._name
+    
+    def get_type(self) ->str:
+        return self._type
     
     def get_semi_major_axis(self) ->float:
         return self._semi_major_axis

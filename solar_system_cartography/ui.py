@@ -13,12 +13,17 @@ try:
 except:
     STANDALONE = True
 
+COLORS = {
+    "Planet" : [255,255,255],
+    "Comet" : [0,0,0]
+}
+
 class CustomTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, data:dict):
         super(CustomTreeItem, self).__init__()
         if not data:
             return
-        self._obj = data
+        self._data = data
         for i in range(17):
             self.setText(i, str(data[i+1]))
 
@@ -35,6 +40,7 @@ class MainUI(QtWidgets.QMainWindow):
 
         self._layout = QtWidgets.QVBoxLayout()
         central_widget.setLayout(self._layout)
+        self._project_path = ""
 
         self.create_menubar()
 
@@ -50,15 +56,14 @@ class MainUI(QtWidgets.QMainWindow):
         self.tab_widget = QtWidgets.QTabWidget()
         self.objects_creation_tab()
         self.objects_vis_tab()
+        self.objects_settings_tab()
 
         self.tab_widget.addTab(self.creation_tab, "CREATE")
         self.tab_widget.addTab(self.select_tab, "SELECT")
+        self.tab_widget.addTab(self.settings_tab, "SETTINGS")
         self._layout.addWidget(self.tab_widget)
 
         self.create_connections()
-
-        self.selected_color = QtGui.QColor(1, 1, 1)
-        self._maya_data = {} # to use for specific settings (color, textures...)
 
     def objects_creation_tab(self) ->None:
         self.creation_tab = QtWidgets.QWidget()
@@ -68,7 +73,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.creation_tab.layout().addWidget(self.parent_box)
         # type box
         self.type_box = QtWidgets.QComboBox()
-        self.type_box.addItems(["Object", "Star"])
+        self.type_box.addItems(["Planet", "Star", "Comet", "Natural Satellite", "Artificial Satellite", "Asteroid", "Random"])
         self.creation_tab.layout().addWidget(self.type_box)
         
         # global grid
@@ -120,20 +125,6 @@ class MainUI(QtWidgets.QMainWindow):
         orbital_group_box.setLayout(orbital_grid_layout)
         self.creation_tab.layout().addWidget(orbital_group_box)
 
-        # visualisation grid
-        visu_group_box = QtWidgets.QGroupBox("VISUALISATION SETTINGS")
-        visu_grid_layout = QtWidgets.QGridLayout()
-        self.visu_data = {}
-        self.visu_data["orbit color"] = QtWidgets.QPushButton()
-        # self.visu_data["object texture"] = QtWidgets.QLineEdit()
-        i = 1      
-        for lbl,box in self.visu_data.items():
-            visu_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
-            visu_grid_layout.addWidget(box, i, 1)
-            i += 1
-        visu_group_box.setLayout(visu_grid_layout)
-        self.creation_tab.layout().addWidget(visu_group_box)
-
         # create button
         self.create_button = QtWidgets.QPushButton("CREATE")
         self.creation_tab.layout().addWidget(self.create_button)
@@ -144,6 +135,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.tree = QtWidgets.QTreeWidget()
         self.tree.setColumnCount(17)
         self.tree.setHeaderLabels(["Name",
+                                   "Type",
                                    "Mass",
                                    "Rotation Period",
                                    "Axis Inclination",
@@ -166,14 +158,36 @@ class MainUI(QtWidgets.QMainWindow):
         select_tab_layout.addWidget(self.tree)
         self.select_tab.setLayout(select_tab_layout)
 
+    def objects_settings_tab(self) ->None:
+        self.settings_tab = QtWidgets.QWidget()
+        self.settings_tab.setLayout(QtWidgets.QVBoxLayout())
+        
+        # visualisation grid
+        visu_group_box = QtWidgets.QGroupBox("COLORS")
+        visu_grid_layout = QtWidgets.QGridLayout()
+        self.visu_data = {}
+        self.visu_data["Planet"] = QtWidgets.QLineEdit()
+        self.visu_data["Planet"].setText(str(COLORS["Planet"]))
+        self.visu_data["Comet"] = QtWidgets.QLineEdit()
+        self.visu_data["Comet"].setText(str(COLORS["Comet"]))
+        i = 1      
+        for lbl,box in self.visu_data.items():
+            visu_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
+            visu_grid_layout.addWidget(box, i, 1)
+            i += 1
+        visu_group_box.setLayout(visu_grid_layout)
+        self.settings_tab.layout().addWidget(visu_group_box)
+        
+        self.settings_tab.layout().addStretch(1)
+
     def reload_tree(self) ->None:
         self.tree.clear()
         objects = self._db.read()
         if not objects:
             return
   
-        for obj in objects or []:
-            item = CustomTreeItem(obj)
+        for data in objects or []:
+            item = CustomTreeItem(data)
             self.tree.addTopLevelItem(item)
 
     def create_menubar(self):
@@ -195,7 +209,6 @@ class MainUI(QtWidgets.QMainWindow):
     def create_connections(self) ->None:
         self.set_project_button.clicked.connect(self.show_project_dialog)
         self.create_button.clicked.connect(self.on_create_button_clicked)
-        self.visu_data["orbit color"].clicked.connect(self.show_color_dialog)
 
     def read(self) ->dict:
         date = self.orb_data.get("random_perihelion_day").date().toString("yyyy.MM.dd").split(".")
@@ -203,6 +216,7 @@ class MainUI(QtWidgets.QMainWindow):
         
         data = {
             "name" : self.glob_data["name"].text(),
+            "type" : self.glob_data["type"].currentText(),
             "mass" : float(self.obj_data.get("mass").text()),
             "day" : float(self.obj_data.get("day").text()),
             "axis_inclination" : float(self.obj_data.get("axis_inclination").text()),
@@ -231,14 +245,13 @@ class MainUI(QtWidgets.QMainWindow):
                               d["random_perihelion_day"][2])
         self.orb_data["random_perihelion_day"].setDate(q_date) 
 
-    def show_color_dialog(self):
-        color = QtWidgets.QColorDialog.getColor(initial=self.selected_color)
+    def show_color_dialog(self, typ:str):
+        color = QtWidgets.QColorDialog.getColor()
 
         if color.isValid():
-            self.selected_color = color
-            self.visu_data["orbit color"].setStyleSheet(f"background-color: {color.name()};")
+            self.visu_data[typ].setStyleSheet(f"background-color: {color.name()};")
             # add to general dict
-            self._maya_data["orbit_color"] = [color.red()/255,color.green()/255,color.blue()/255]
+            COLORS[typ] = [color.red()/255,color.green()/255,color.blue()/255]
 
     def show_project_dialog(self):
         options = QtWidgets.QFileDialog.Options()
@@ -260,7 +273,7 @@ class MainUI(QtWidgets.QMainWindow):
         items = []
         def get_items(tree_item):
             try:
-                items.append(tree_item._obj)
+                items.append(tree_item._data)
             except:
                 "is invisibleRootItem"
             for i in range(tree_item.childCount()):
@@ -271,24 +284,26 @@ class MainUI(QtWidgets.QMainWindow):
         for item in items:
             data = {
                 "name" : item[1],
-                "mass" : item[2],
-                "day" : item[3],
-                "axis_inclination" : item[4],
-                "semi_major_axis" : item[5],
+                "type" : item[2],
+                "mass" : item[3],
+                "day" : item[4],
+                "axis_inclination" : item[5],
+                "semi_major_axis" : item[6],
                 "inclination" : item[7],
-                "eccentricity" : item[8],
-                "arg_periapsis" : item[11],
-                "ascending_node" : item[10],
-                "random_perihelion_day" : eval(item[17])
+                "eccentricity" : item[9],
+                "arg_periapsis" : item[12],
+                "ascending_node" : item[11],
+                "random_perihelion_day" : eval(item[18])
             }
-            self.build_rig(data, insert_in_database=False)
+            self.build_rig(data)
 
     def on_create_button_clicked(self) ->None:
         self.build_rig(self.read())
     
-    def build_rig(self, d:dict, insert_in_database:bool=True) ->None:
+    def build_rig(self, d:dict) ->None:
         obj = ObjectInOrbit(project_path=self._project_path,
                             object_name=d["name"],
+                            object_type=d["type"],
                             object_mass=d["mass"],
                             semi_major_axis=d["semi_major_axis"],
                             inclination=d["inclination"],
@@ -297,13 +312,13 @@ class MainUI(QtWidgets.QMainWindow):
                             arg_periapsis=d["arg_periapsis"],
                             ascending_node=d["ascending_node"],
                             axis_inclination=d["axis_inclination"],
-                            random_perihelion_day=d["random_perihelion_day"],
-                            insert_in_database=insert_in_database)
+                            random_perihelion_day=d["random_perihelion_day"]
+                            )
         
         self.reload_tree()
         
         if not STANDALONE:
-            rig = Rig(obj, self._maya_data)
+            rig = Rig(obj, COLORS[d["type"]])
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()

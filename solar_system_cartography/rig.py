@@ -4,13 +4,15 @@ from solar_system_cartography.api import ObjectInOrbit, Star
 from solar_system_cartography import envs
 
 class Rig():
-    def __init__(self, obj:ObjectInOrbit, maya_data:dict=None, star:Star=None) ->None:
+    def __init__(self, obj:ObjectInOrbit, color:list=None, star:Star=None) ->None:
         self._obj = obj
         self._name = self.conform_name()
         
 
         self._star = star
-        self._maya = maya_data
+        self._color = color
+        if not self._color:
+            self._color = [0.5,0.5,0.5]
 
         # not used yet
         self._group = f"{self._name}_group"
@@ -120,13 +122,10 @@ class Rig():
         cmds.setAttr(f"{offset}.rotateY", self._obj.get_ascending_node())
 
         # color orbit
-        color = [1,1,1]
-        if self._maya:
-            color = self._maya["orbit_color"]
         shape = cmds.listRelatives(orbit, s=True)[0]
         cmds.setAttr(f"{shape}.overrideEnabled", True)
         cmds.setAttr(f"{shape}.overrideRGBColors", True)
-        cmds.setAttr(f"{shape}.overrideColorRGB", *color)
+        cmds.setAttr(f"{shape}.overrideColorRGB", *self._color)
 
         print("created", orbit)
 
@@ -159,12 +158,9 @@ class Rig():
         cmds.parent(transform,offset)
 
         # color
-        color = [1,1,1]
-        if self._maya:
-            color = self._maya["orbit_color"]
         cmds.setAttr(f"{shape}.overrideEnabled", True)
         cmds.setAttr(f"{shape}.overrideRGBColors", True)
-        cmds.setAttr(f"{shape}.overrideColorRGB", *color)
+        cmds.setAttr(f"{shape}.overrideColorRGB", *self._color)
 
     def cstr_offset_orbit(self, orbit_name:str, offset_name):
         poc = cmds.createNode("pointOnCurveInfo", n=f"{self._name}_POC")
