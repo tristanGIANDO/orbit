@@ -17,7 +17,7 @@ class ObjectInOrbit():
     def __init__(self, project_path:str, object_name:str, object_mass:float, semi_major_axis:float,
                  inclination:float, eccentricity:float, rotation_period:float,
                  axis_inclination:float, ascending_node:float, arg_periapsis:float, object_radius:float=0.05,
-                 attraction_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1]) -> None:
+                 attraction_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1], insert_in_database:bool=True) -> None:
         
         if not object_name:
             raise RuntimeError("What is the name of the object ? Specify 'object_name'")
@@ -50,8 +50,10 @@ class ObjectInOrbit():
         self._aphelion_distance = self.set_aphelion_distance()
         self._aphelion_velocity = self.set_aphelion_velocity()
 
-        db = Database(project_path)
-        db.insert_object(self.read())
+        
+        if insert_in_database:
+            db = Database(project_path)
+            db.insert_object(self.read())
 
     def __repr__(self) -> str:
         return f"""

@@ -10,6 +10,11 @@ class Database():
 
         self.create()
 
+    def _row_exists(self, row_id:str) ->bool:
+        for file in self.select_rows():
+            if file[0] == row_id:
+                return True
+            
     def create(self) ->None:
         self._cursor.execute(f"""
                 CREATE TABLE IF NOT EXISTS {self._name}
@@ -36,6 +41,10 @@ class Database():
                 """)
 
     def insert_object(self, data:dict) ->None:
+        object_name = data["name"]
+        if self._row_exists(object_name):
+            self.delete_object(object_name)
+
         self._cursor.execute(f"""
                 INSERT INTO {self._name}
                 (
@@ -60,7 +69,7 @@ class Database():
 
                 VALUES
                 (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                """, (data["name"],
+                """, (object_name,
                       data["mass"],
                       data["rotation_period"],
                       data["axis_inclination"],
@@ -87,6 +96,11 @@ class Database():
         self._cursor.execute(f"SELECT * FROM {self._name}")
         return self._cursor.fetchall()
     
+    def delete_object(self, name:str):
+        sql = f"DELETE FROM {self._name} WHERE name = '{name}'"
+        self._cursor.execute(sql)
+        self._db.commit()
+
     def update(self, column:str, id:str, new_value:str):
         try:
             sql = f"UPDATE {self._name} SET {column} = '{new_value}' WHERE (id = '{str(id)}')"

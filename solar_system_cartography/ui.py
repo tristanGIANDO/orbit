@@ -9,8 +9,9 @@ try:
     from solar_system_cartography.rig import Rig
     from maya import OpenMayaUI as omui
     from shiboken2 import wrapInstance
+    STANDALONE = False
 except:
-    print("Standalone mode")
+    STANDALONE = True
 
 class CustomTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, data:dict):
@@ -18,7 +19,7 @@ class CustomTreeItem(QtWidgets.QTreeWidgetItem):
         if not data:
             return
         self._obj = data
-        for i in range(16):
+        for i in range(17):
             self.setText(i, str(data[i+1]))
 
 class MainUI(QtWidgets.QMainWindow):
@@ -167,7 +168,6 @@ class MainUI(QtWidgets.QMainWindow):
 
     def reload_tree(self) ->None:
         objects = self._db.read()
-        print(objects)
         if not objects:
             return
   
@@ -201,6 +201,7 @@ class MainUI(QtWidgets.QMainWindow):
         date = [int(d) for d in date]
         
         data = {
+            "name" : self.glob_data["name"].text(),
             "mass" : float(self.obj_data.get("mass").text()),
             "day" : float(self.obj_data.get("day").text()),
             "axis_inclination" : float(self.obj_data.get("axis_inclination").text()),
@@ -252,14 +253,41 @@ class MainUI(QtWidgets.QMainWindow):
             self.root_project_line_edit.setText(project_path)
             self._db = Database(project_path)
             self.reload_tree()
+            self.build_from_tree()
+
+    def build_from_tree(self) ->None:
+        items = []
+        def get_items(tree_item):
+            try:
+                items.append(tree_item._obj)
+            except:
+                "is invisibleRootItem"
+            for i in range(tree_item.childCount()):
+                get_items(tree_item.child(i))
+
+        get_items(self.tree.invisibleRootItem())
+        
+        for item in items:
+            data = {
+                "name" : item[1],
+                "mass" : item[2],
+                "day" : item[3],
+                "axis_inclination" : item[4],
+                "semi_major_axis" : item[5],
+                "inclination" : item[7],
+                "eccentricity" : item[8],
+                "arg_periapsis" : item[11],
+                "ascending_node" : item[10],
+                "random_perihelion_day" : eval(item[17])
+            }
+            self.build_rig(data, insert_in_database=False)
 
     def on_create_button_clicked(self) ->None:
-        self.build_rig()
+        self.build_rig(self.read())
     
-    def build_rig(self) ->None:
-        d = self.read()
+    def build_rig(self, d:dict, insert_in_database:bool=True) ->None:
         obj = ObjectInOrbit(project_path=self._project_path,
-                            object_name=self.glob_data["name"].text(),
+                            object_name=d["name"],
                             object_mass=d["mass"],
                             semi_major_axis=d["semi_major_axis"],
                             inclination=d["inclination"],
@@ -268,13 +296,13 @@ class MainUI(QtWidgets.QMainWindow):
                             arg_periapsis=d["arg_periapsis"],
                             ascending_node=d["ascending_node"],
                             axis_inclination=d["axis_inclination"],
-                            random_perihelion_day=d["random_perihelion_day"])
+                            random_perihelion_day=d["random_perihelion_day"],
+                            insert_in_database=insert_in_database)
         
         self.reload_tree()
-        try:
+        
+        if not STANDALONE:
             rig = Rig(obj, self._maya_data)
-        except:
-            print("Visualisation available in Maya only")
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()

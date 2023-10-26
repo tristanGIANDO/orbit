@@ -197,7 +197,6 @@ class Rig():
             
     def anim_orbit(self, poc:str) ->None:
         for t, v in self._obj.get_covered_distance_each_day().items():
-            print(t, v)
             cmds.setKeyframe(f"{poc}.parameter", v=v, t=t)
 
         cmds.keyTangent(f"{poc}.parameter", itt="spline", ott="spline")
