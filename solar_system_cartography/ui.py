@@ -1,4 +1,4 @@
-import sys
+import os, sys
 from functools import partial
 from solar_system_cartography.Qt import QtWidgets, QtGui, QtCore
 from solar_system_cartography.api import ObjectInOrbit
@@ -13,9 +13,16 @@ try:
 except:
     STANDALONE = True
 
+TYPES = ["Planet", "Star", "Comet", "Natural Satellite", "Artificial Satellite", "Asteroid", "Random"]
+
 COLORS = {
-    "Planet" : [255,255,255],
-    "Comet" : [0,0,0]
+    TYPES[0] : [255,255,255],
+    TYPES[1] : [0,0,0],
+    TYPES[2] : [0,0,255],
+    TYPES[3] : [255,0,0],
+    TYPES[4] : [0,255,0],
+    TYPES[5] : [80,20,255],
+    TYPES[6] : [50,50,50],
 }
 
 class CustomTreeItem(QtWidgets.QTreeWidgetItem):
@@ -31,9 +38,10 @@ class MainUI(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainUI, self).__init__(parent)
 
+        self._title = "ORBIT"
+        self._version = "dev"
         self._db = None
-
-        self.setWindowTitle("Cartographer v-dev")
+        self.setWindowTitle(f"{self._title} v-{self._version}")
         self.setGeometry(100, 100, 600, 400)
         central_widget = QtWidgets.QWidget()
         self.setCentralWidget(central_widget)
@@ -44,9 +52,14 @@ class MainUI(QtWidgets.QMainWindow):
 
         self.create_menubar()
 
+        title_label = QtWidgets.QLabel(self._title)
+        title_label.setFont(QtGui.QFont("Arial", 18, QtGui.QFont.Bold))
+        title_label.setAlignment(QtCore.Qt.AlignCenter)
+        central_widget.layout().addWidget(title_label)
         # root
         root_layout = QtWidgets.QHBoxLayout()
         self.root_project_line_edit = QtWidgets.QLineEdit()
+        self.root_project_line_edit.addAction(ICONS.get("folder"), QtWidgets.QLineEdit.LeadingPosition)
         self.root_project_line_edit.setPlaceholderText("Project Directory")
         self.set_project_button = QtWidgets.QPushButton("Set Project")
         root_layout.addWidget(self.root_project_line_edit)
@@ -58,9 +71,9 @@ class MainUI(QtWidgets.QMainWindow):
         self.objects_vis_tab()
         self.objects_settings_tab()
 
-        self.tab_widget.addTab(self.creation_tab, "CREATE")
-        self.tab_widget.addTab(self.select_tab, "SELECT")
-        self.tab_widget.addTab(self.settings_tab, "SETTINGS")
+        self.tab_widget.addTab(self.creation_tab, ICONS.get("create"), "CREATE")
+        self.tab_widget.addTab(self.select_tab, ICONS.get("select"), "SELECT")
+        self.tab_widget.addTab(self.settings_tab, ICONS.get("settings"), "SETTINGS")
         self._layout.addWidget(self.tab_widget)
 
         self.create_connections()
@@ -73,7 +86,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.creation_tab.layout().addWidget(self.parent_box)
         # type box
         self.type_box = QtWidgets.QComboBox()
-        self.type_box.addItems(["Planet", "Star", "Comet", "Natural Satellite", "Artificial Satellite", "Asteroid", "Random"])
+        self.type_box.addItems(TYPES)
         self.creation_tab.layout().addWidget(self.type_box)
         
         # global grid
@@ -81,6 +94,7 @@ class MainUI(QtWidgets.QMainWindow):
         object_grid_layout = QtWidgets.QGridLayout()
         self.glob_data = {}
         self.glob_data["name"] = QtWidgets.QLineEdit()
+        self.glob_data["name"].setPlaceholderText("Object name")
         self.glob_data["type"] = self.type_box
         self.glob_data["parent"] = self.parent_box
         i = 1      
@@ -96,8 +110,11 @@ class MainUI(QtWidgets.QMainWindow):
         object_grid_layout = QtWidgets.QGridLayout()
         self.obj_data = {}
         self.obj_data["mass"] = QtWidgets.QLineEdit()
+        self.obj_data["mass"].setPlaceholderText("Object mass (kg)")
         self.obj_data["day"] = QtWidgets.QLineEdit()
+        self.obj_data["day"].setPlaceholderText("Number of earth days to complete a full circle on its axis")
         self.obj_data["axis_inclination"] = QtWidgets.QLineEdit()
+        self.obj_data["axis_inclination"].setPlaceholderText("Inclination of the object on its axis (°)")
         i = 1      
         for lbl,box in self.obj_data.items():
             object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -111,10 +128,15 @@ class MainUI(QtWidgets.QMainWindow):
         orbital_grid_layout = QtWidgets.QGridLayout()
         self.orb_data = {}
         self.orb_data["semi_major_axis"] = QtWidgets.QLineEdit()
+        self.orb_data["semi_major_axis"].setPlaceholderText("Semi major axis of the orbit (AU)")
         self.orb_data["inclination"] = QtWidgets.QLineEdit()
+        self.orb_data["inclination"].setPlaceholderText("Inclination of the orbit (°)")
         self.orb_data["eccentricity"] = QtWidgets.QLineEdit()
+        self.orb_data["eccentricity"].setPlaceholderText("Eccentricity of the orbit")
         self.orb_data["arg_periapsis"] = QtWidgets.QLineEdit()
+        self.orb_data["arg_periapsis"].setPlaceholderText("Periapsis argument (°)")
         self.orb_data["ascending_node"] = QtWidgets.QLineEdit()
+        self.orb_data["ascending_node"].setPlaceholderText("Ascending node (°)")
         self.orb_data["random_perihelion_day"] = QtWidgets.QDateEdit()
         self.orb_data["random_perihelion_day"].setDisplayFormat("yyyy, MM, dd")
         i = 1      
@@ -166,10 +188,9 @@ class MainUI(QtWidgets.QMainWindow):
         visu_group_box = QtWidgets.QGroupBox("COLORS")
         visu_grid_layout = QtWidgets.QGridLayout()
         self.visu_data = {}
-        self.visu_data["Planet"] = QtWidgets.QLineEdit()
-        self.visu_data["Planet"].setText(str(COLORS["Planet"]))
-        self.visu_data["Comet"] = QtWidgets.QLineEdit()
-        self.visu_data["Comet"].setText(str(COLORS["Comet"]))
+        for typ in TYPES:
+            self.visu_data[typ] = QtWidgets.QLineEdit()
+            self.visu_data[typ].setText(str(COLORS[typ]))
         i = 1      
         for lbl,box in self.visu_data.items():
             visu_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -192,12 +213,6 @@ class MainUI(QtWidgets.QMainWindow):
 
     def create_menubar(self):
         self.menu_bar = self.menuBar()
-        
-        self.file_menu = self.menu_bar.addMenu("File")
-        self.new_file_action = QtWidgets.QAction("New file", self)
-        self.open_file_action = QtWidgets.QAction("Open file", self)
-        self.file_menu.addAction(self.new_file_action)
-        self.file_menu.addAction(self.open_file_action)
 
         self.presets_menu = self.menu_bar.addMenu("Presets")
         self.action = {}
@@ -319,6 +334,32 @@ class MainUI(QtWidgets.QMainWindow):
         
         if not STANDALONE:
             rig = Rig(obj, COLORS[d["type"]])
+
+class Icons():
+    def __init__(self):
+        self._root = os.path.join(os.path.dirname(__file__), "icons")
+        self._cache = {}
+        self._icons = {
+            "logo" : "logo.png",
+            "create" : "create.png",
+            "folder" : "folder.png",
+            "global" : "global.png",
+            "orbital" : "orbital.png",
+            "physical" : "physical.png",
+            "select" : "select.jpg",
+            "settings" : "settings.png"
+        }
+
+    def get(self, key):
+        if key in self._cache:
+            return self._cache[key]
+        
+        path = os.path.join(self._root, self._icons.get(key))
+        icon = QtGui.QIcon(path)
+        self._cache[path] = icon
+        return icon
+
+ICONS = Icons()
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
