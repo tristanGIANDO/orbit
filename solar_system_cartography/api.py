@@ -3,18 +3,47 @@ from solar_system_cartography import envs, utils
 from solar_system_cartography.database import Database
 
 class Star():
-    def __init__(self, name:str, mass:str) -> None:
+    def __init__(self, project_path:str, name:str, mass:str) -> None:
         self._name = name
         self._mass = mass
+        self._type = "Star"
+
+        self._db = Database(project_path)
+        self._db.insert_object(self.read())
 
     def get_name(self) ->str:
         return self._name
     
+    def get_type(self) ->str:
+        return self._type
+    
+    def get_mass(self) ->float:
+        return self._mass
+    
+    def get_influences(self, names:list) ->list:
+        influences = []
+        for obj in [self._db.find_object(name) for name in names]:
+            obj = obj[0]
+            mass = obj[3]
+            influence = self.get_object_influence(mass)
+            influences.append(influence)
+        barycenter_influence = 1 - sum(influences)
+        influences.insert(0, barycenter_influence)
+
+        return influences
+    
     def get_object_influence(self, object_mass) ->float:
         return object_mass / self._mass * 100
+    
+    def read(self) ->dict:
+        return {
+            "name" : self.get_name(),
+            "type" : self.get_type(),
+            "mass" : self.get_mass()
+        }
 
 class ObjectInOrbit():
-    def __init__(self, project_path:str, object_name:str, object_type:str, object_mass:float, semi_major_axis:float,
+    def __init__(self, project_path:str, object_name:str, object_type:str, object_parent:str, object_mass:float, semi_major_axis:float,
                  inclination:float, eccentricity:float, rotation_period:float,
                  axis_inclination:float, ascending_node:float, arg_periapsis:float, object_radius:float=0.05,
                  attraction_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1]) -> None:
@@ -32,6 +61,7 @@ class ObjectInOrbit():
         
         self._name = object_name
         self._type = object_type
+        self._parent = object_parent
         self._semi_major_axis = semi_major_axis
         self._inclination = inclination
         self._eccentricity = eccentricity
@@ -83,6 +113,7 @@ class ObjectInOrbit():
         return {
             "name" : self.get_name(),
             "type" : self.get_type(),
+            "parent" : self.get_parent(),
             "mass" : self.get_mass(),
             "rotation_period" : self.get_rotation_period(),
             "axis_inclination" : self.get_axis_inclination(),
@@ -107,6 +138,9 @@ class ObjectInOrbit():
     def get_type(self) ->str:
         return self._type
     
+    def get_parent(self) ->str:
+        return self._parent
+
     def get_semi_major_axis(self) ->float:
         return self._semi_major_axis
     
@@ -264,7 +298,6 @@ class ObjectInOrbit():
         t3,t4 = 10,12
         # positions may change but space between dates must be the same
 
-
         AIRE1,AIRE2 = 0,0
         i1,i2 = 0,0 
 
@@ -326,23 +359,4 @@ class ObjectInOrbit():
         return data
     
 if __name__ == "__main__":
-    # print(get_semi_minor_axis(30.0699, 0.00859))
-    # print(get_orbital_period(convert_au_to_meters(0.38709808989279954)))
-
-    def get_perihelion():
-        inclinaison_degrees = 162.238  # Inclinaison de l'orbite en degrés
-        longitude_du_noeud_ascendant_degrees = 58  # Longitude du nœud ascendant en degrés
-
-        # Conversion des angles en radians
-        inclinaison_radians = math.radians(inclinaison_degrees)
-        longitude_du_noeud_ascendant_radians = math.radians(longitude_du_noeud_ascendant_degrees)
-
-        # Calcul de l'argument du périhélie (ω) en radians
-        argument_du_perihelie_radians = math.atan2(-math.cos(inclinaison_radians) * math.sin(longitude_du_noeud_ascendant_radians), math.cos(longitude_du_noeud_ascendant_radians))
-
-        # Conversion de l'angle résultant en degrés
-        argument_du_perihelie_degrees = math.degrees(argument_du_perihelie_radians)
-
-        return argument_du_perihelie_degrees
-    
-    object_name = "Mercury"
+    pass

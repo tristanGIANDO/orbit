@@ -1,7 +1,7 @@
 import os, sys
 from functools import partial
 from solar_system_cartography.Qt import QtWidgets, QtGui, QtCore
-from solar_system_cartography.api import ObjectInOrbit
+from solar_system_cartography.api import ObjectInOrbit, Star
 from solar_system_cartography.envs import PRESETS
 from solar_system_cartography.database import Database
 
@@ -14,6 +14,12 @@ except:
     STANDALONE = True
 
 TYPES = ["Planet", "Star", "Comet", "Natural Satellite", "Artificial Satellite", "Asteroid", "Random"]
+
+HEADERS = ["Name", "Type", "Parent", "Mass (kg)", "Rotation Period (d)", "Axis Inclination (°)",
+           "Semi Major Axis (AU)", "Semi Minor Axis (AU)", "Inclination (°)", "Eccentricity",
+           "Orbital Period (d)","Ascending Node (°)","Periapsis Argument (°)","Circumference (m)",
+           "Perihelion Distance (AU)","Perihelion Speed (m/s)","Aphelion Distance (AU)",
+            "Aphelion Speed (m/s)","Perihelion Date"]
 
 COLORS = {
     TYPES[0] : [255,255,255],
@@ -31,8 +37,9 @@ class CustomTreeItem(QtWidgets.QTreeWidgetItem):
         if not data:
             return
         self._data = data
-        for i in range(17):
-            self.setText(i, str(data[i+1]))
+        if data and len(data) >= 17:
+            for i in range(17):
+                self.setText(i, str(data[i+1]))
 
 class MainUI(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
@@ -81,22 +88,16 @@ class MainUI(QtWidgets.QMainWindow):
     def objects_creation_tab(self) ->None:
         self.creation_tab = QtWidgets.QWidget()
         self.creation_tab.setLayout(QtWidgets.QVBoxLayout())
-        # parent box
-        self.parent_box = QtWidgets.QComboBox()
-        self.creation_tab.layout().addWidget(self.parent_box)
-        # type box
-        self.type_box = QtWidgets.QComboBox()
-        self.type_box.addItems(TYPES)
-        self.creation_tab.layout().addWidget(self.type_box)
-        
+ 
         # global grid
         glob_group_box = QtWidgets.QGroupBox("GLOBAL")
         object_grid_layout = QtWidgets.QGridLayout()
         self.glob_data = {}
         self.glob_data["name"] = QtWidgets.QLineEdit()
         self.glob_data["name"].setPlaceholderText("Object name")
-        self.glob_data["type"] = self.type_box
-        self.glob_data["parent"] = self.parent_box
+        self.glob_data["type"] = QtWidgets.QComboBox()
+        self.glob_data["type"].addItems(TYPES)
+        self.glob_data["parent"] = QtWidgets.QComboBox()
         i = 1      
         for lbl,box in self.glob_data.items():
             object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -154,27 +155,14 @@ class MainUI(QtWidgets.QMainWindow):
 
     def objects_vis_tab(self) ->None:
         self.select_tab = QtWidgets.QWidget()
-        self.tree = QtWidgets.QTreeWidget()
-        self.tree.setColumnCount(17)
-        self.tree.setHeaderLabels(["Name",
-                                   "Type",
-                                   "Mass",
-                                   "Rotation Period",
-                                   "Axis Inclination",
-                                   "Semi Major Axis",
-                                   "Semi Minor Axis",
-                                   "Inclination",
-                                   "Eccentricity",
-                                   "Period",
-                                   "Ascending Node",
-                                   "Periapsis Argument",
-                                   "Circumference",
-                                   "Perihelion Distance",
-                                   "Perihelion Speed",
-                                   "Aphelion Distance",
-                                   "Aphelion Speed",
-                                   "Perihelion Date"
-                                   ])
+        self.tree = QtWidgets.QTreeWidget() 
+        self.tree.setColumnCount(len(HEADERS))
+        self.tree.setHeaderLabels(HEADERS)
+        for i in range(len(HEADERS)):
+            self.tree.header().setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeToContents)
+        self.tree.setRootIsDecorated(False)
+        self.tree.setSortingEnabled(True)
+        self.tree.header().sectionsMovable()
         
         select_tab_layout = QtWidgets.QVBoxLayout()
         select_tab_layout.addWidget(self.tree)
@@ -200,6 +188,15 @@ class MainUI(QtWidgets.QMainWindow):
         self.settings_tab.layout().addWidget(visu_group_box)
         
         self.settings_tab.layout().addStretch(1)
+
+    def reload(self) ->None:
+        self.reload_parents()
+        self.reload_tree()
+
+    def reload_parents(self) ->None:
+        parents = ["origin"] + [p[1] for p in self._db.read()]
+        self.glob_data["parent"].clear()
+        self.glob_data["parent"].addItems(parents)
 
     def reload_tree(self) ->None:
         self.tree.clear()
@@ -228,10 +225,18 @@ class MainUI(QtWidgets.QMainWindow):
     def read(self) ->dict:
         date = self.orb_data.get("random_perihelion_day").date().toString("yyyy.MM.dd").split(".")
         date = [int(d) for d in date]
+        typ = self.glob_data["type"].currentText()
+        if typ == "Star":
+            return {
+                "name" : self.glob_data["name"].text(),
+                "type" : typ,
+                "mass" : float(self.obj_data.get("mass").text())
+                }
         
-        data = {
+        return {
             "name" : self.glob_data["name"].text(),
-            "type" : self.glob_data["type"].currentText(),
+            "type" : typ,
+            "parent" : self.glob_data["parent"].currentText(),
             "mass" : float(self.obj_data.get("mass").text()),
             "day" : float(self.obj_data.get("day").text()),
             "axis_inclination" : float(self.obj_data.get("axis_inclination").text()),
@@ -242,7 +247,6 @@ class MainUI(QtWidgets.QMainWindow):
             "ascending_node" : float(self.orb_data.get("ascending_node").text()),
             "random_perihelion_day" : date
         }
-        return data
     
     def on_preset_triggered(self, name) ->None:
         d = PRESETS.get(name)
@@ -281,9 +285,9 @@ class MainUI(QtWidgets.QMainWindow):
             self._project_path = project_path
             self.root_project_line_edit.setText(project_path)
             self._db = Database(project_path)
-            self.reload_tree()
+            self.reload()
             self.build_from_tree()
-
+            
     def build_from_tree(self) ->None:
         items = []
         def get_items(tree_item):
@@ -297,29 +301,41 @@ class MainUI(QtWidgets.QMainWindow):
         get_items(self.tree.invisibleRootItem())
         
         for item in items:
+            try:
+                date = eval(item[-1])
+            except:
+                date = [2000,1,1]
             data = {
                 "name" : item[1],
                 "type" : item[2],
-                "mass" : item[3],
-                "day" : item[4],
-                "axis_inclination" : item[5],
-                "semi_major_axis" : item[6],
-                "inclination" : item[7],
-                "eccentricity" : item[9],
-                "arg_periapsis" : item[12],
-                "ascending_node" : item[11],
-                "random_perihelion_day" : eval(item[18])
+                "parent" : item[3],
+                "mass" : item[4],
+                "day" : item[5],
+                "axis_inclination" : item[6],
+                "semi_major_axis" : item[7],
+                "inclination" : item[9],
+                "eccentricity" : item[10],
+                "arg_periapsis" : item[13],
+                "ascending_node" : item[12],
+                "random_perihelion_day" : date
             }
             self.build_rig(data)
 
     def on_create_button_clicked(self) ->None:
         self.build_rig(self.read())
+        self.reload()
     
     def build_rig(self, d:dict) ->None:
-        obj = ObjectInOrbit(project_path=self._project_path,
+        if d["type"] == "Star":
+            obj = Star(project_path=self._project_path,
+                       name=d["name"],
+                       mass=d["mass"])
+        else:
+            obj = ObjectInOrbit(project_path=self._project_path,
                             object_name=d["name"],
                             object_type=d["type"],
                             object_mass=d["mass"],
+                            object_parent=d["parent"],
                             semi_major_axis=d["semi_major_axis"],
                             inclination=d["inclination"],
                             eccentricity=d["eccentricity"],

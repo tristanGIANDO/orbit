@@ -13,9 +13,9 @@ class Database():
     def connect(self):
         return sqlite3.connect(os.path.join(self._path, f"{self._name}.db"))
 
-    def _row_exists(self, row_id:str) ->bool:
+    def _row_exists(self, name:str) ->bool:
         for file in self.read():
-            if file[0] == row_id:
+            if file[1] == name:
                 return True
             
     def create(self) ->None:
@@ -25,6 +25,7 @@ class Database():
                     [id] INT AUTO_INCREMENT PRIMARY KEY,
                     [name] TEXT,
                     [type] TEXT,
+                    [parent] TEXT,
                     [mass] REAL,
                     [rotation_period] REAL,
                     [axis_inclination] REAL,
@@ -54,6 +55,7 @@ class Database():
                 (
                     name,
                     type,
+                    parent,
                     mass,
                     rotation_period,
                     axis_inclination,
@@ -73,25 +75,26 @@ class Database():
                 )
 
                 VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """, (object_name,
                       data["type"],
+                      data["parent"],
                       data["mass"],
-                      data["rotation_period"],
-                      data["axis_inclination"],
-                      data["semi_major_axis"],
-                      data["semi_minor_axis"],
-                      data["inclination"],
-                      data["eccentricity"],
-                      data["period"],
-                      data["ascending_node"],
-                      data["arg_periapsis"],
-                      data["circumference"],
-                      data["distance_at_perihelion"],
-                      data["velocity_at_perihelion"],
-                      data["distance_at_aphelion"],
-                      data["velocity_at_aphelion"],
-                      str(data["perihelion_day"]),
+                      data.get("rotation_period",0),
+                      data.get("axis_inclination",0),
+                      data.get("semi_major_axis",0),
+                      data.get("semi_minor_axis",0),
+                      data.get("inclination",0),
+                      data.get("eccentricity",0),
+                      data.get("period",0),
+                      data.get("ascending_node",0),
+                      data.get("arg_periapsis",0),
+                      data.get("circumference",0),
+                      data.get("distance_at_perihelion",0),
+                      data.get("velocity_at_perihelion",0),
+                      data.get("distance_at_aphelion",0),
+                      data.get("velocity_at_aphelion",0),
+                      str(data.get("perihelion_day","")),
                       )
                 )
 
@@ -99,6 +102,10 @@ class Database():
 
     def read(self):
         self._cursor.execute(f"SELECT * FROM {self._name}")
+        return self._cursor.fetchall()
+    
+    def find_object(self, name:str):
+        self._cursor.execute(f"SELECT * FROM {self._name} WHERE name = '{name}'")
         return self._cursor.fetchall()
     
     def delete_object(self, name:str):

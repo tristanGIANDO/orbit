@@ -4,15 +4,19 @@ from solar_system_cartography.api import ObjectInOrbit, Star
 from solar_system_cartography import envs
 
 class Rig():
-    def __init__(self, obj:ObjectInOrbit, color:list=None, star:Star=None) ->None:
+    def __init__(self, obj:ObjectInOrbit, color:list=None) ->None:
         self._obj = obj
         self._name = self.conform_name()
         
+        self._type = self._obj.get_type()
 
-        self._star = star
-        self._color = color
-        if not self._color:
+        self._color = []
+        if not color:
             self._color = [0.5,0.5,0.5]
+        for c in color:
+            if c > 1 :
+                c = c / 255
+            self._color.append(c)
 
         # not used yet
         self._group = f"{self._name}_group"
@@ -70,16 +74,6 @@ class Rig():
         if not cmds.objExists(name):
             cmds.spaceLocator(n=name)[0]
         return name
-    
-    def cr_star(self, barycenter:str) ->str:
-        name = self._star.get_name()
-        control_name = f"{name}_control"
-        if not cmds.objExists(control_name):
-            control = cmds.spaceLocator(n=control_name)[0]
-            obj = cmds.polySphere(n=f"{name}_geo", radius=0.5)[0]
-            cmds.parent(control, barycenter)
-            cmds.parent(obj, control)
-        return control_name
 
     def cr_orbit(self) ->str:
         """Creates the orbit of the object
@@ -127,8 +121,6 @@ class Rig():
         cmds.setAttr(f"{shape}.overrideRGBColors", True)
         cmds.setAttr(f"{shape}.overrideColorRGB", *self._color)
 
-        print("created", orbit)
-
         return orbit
 
     def cr_hierarchy(self, orbit:str, offset:str) ->str:
@@ -146,10 +138,10 @@ class Rig():
         cmds.matchTransform(control, offset)
         return control
 
-    def cr_geo(self, control:str) ->str:
-        obj = cmds.polySphere(n=f"{self._name}_geo", radius=0.05)[0]
-        cmds.parent(obj,control)
-        cmds.matchTransform(obj, control)
+    def cr_geo(self, control:str, suffix:str="object", radius:float=0.1) ->str:
+        # obj = cmds.polySphere(n=f"{self._name}_geo", radius=0.05)[0]
+        cmds.select(control)
+        obj = cmds.joint(n=f"{self._name}_{suffix}", rad=radius)
         return obj
 
     def cr_annotation(self, offset:str) ->str:
@@ -174,11 +166,25 @@ class Rig():
     def cstr_orbit_barycenter(self, orbit:str, barycenter:str) ->None:
         cmds.connectAttr(f"{barycenter}.worldMatrix[0]", f"{orbit}.offsetParentMatrix", f=True)
 
-    def cstr_star_obj(self, star:str, obj:str) ->None:
-        cmds.parentConstraint(obj,
-                              star,
-                              mo=False,
-                              w=self._star.get_object_influence(self._obj.get_mass()))
+    def cstr_star(self, star:str) ->None:
+        obj_suffix = "_object"
+        names = [obj.split(f"{obj_suffix}")[0] for obj in cmds.ls(f"*{obj_suffix}", typ="joint")]
+        print(names)
+        influences = self._obj.get_influences(names)
+        print(influences)
+        names.insert(0, "barycenter")
+
+        for obj,value in zip(names,influences):
+            if obj != "barycenter":
+                obj = f"{obj}{obj_suffix}"
+            cmds.parentConstraint(obj,
+                                star,
+                                mo=False,
+                                w=value)
+
+    def cstr_obj_to_parent(self, obj:str, parent:str) ->None:
+        # cmds.connectAttr(f"{parent}.worldMatrix[0]", f"{obj}.offsetParentMatrix", f=True)
+        cmds.parentConstraint(parent, obj, mo=False)
 
     def get_distances(orbit:str) ->dict:
         barycenter_pos = [0.0, 0.0, 0.0]
@@ -226,29 +232,45 @@ class Rig():
         for node in [self._group, self._offset, self._control]:
             if cmds.objExists(node):
                 cmds.delete(node)
-                print("deleted_node")
 
     def build(self) ->None:
+        if self._type == "Star":
+            self.build_star()
+        else:
+            self.build_object_in_orbit()
+
+    def build_object_in_orbit(self) ->None:
         # delete the old one if exists
         self.delete()
         # create new one
-        barycenter = self.cr_barycenter()
+        
         orbit = self.cr_orbit()
         offset = self.cr_offset()
         control = self.cr_control(offset)
         geo = self.cr_geo(control)
         self.cr_annotation(offset)
-        group = self.cr_hierarchy(orbit,offset)
+        group = self.cr_hierarchy(orbit, offset)
 
         poc = self.cstr_offset_orbit(orbit, offset)
-        self.cstr_orbit_barycenter(orbit, barycenter)
-
-        if self._star:
-            star_control = self.cr_star(barycenter)
-            self.cstr_star_obj(star_control, control)
+        parent = self._obj.get_parent()
 
         self.anim_orbit(poc)
         self.anim_offset(control, offset)
+
+        if parent == "origin":
+            barycenter = self.cr_barycenter()
+            self.cstr_obj_to_parent(orbit, barycenter)
+        else:
+            parent = f"{parent}_follow"
+            self.cstr_obj_to_parent(orbit, parent)
+    
+    def build_star(self) ->None:
+        self.delete()
+        barycenter = self.cr_barycenter()
+        offset = self.cr_offset()
+        control = self.cr_control(offset)
+        geo = self.cr_geo(control, "star", 0.5)
+        self.cstr_star(geo)
 
 if __name__ == "__main__":
     pass
