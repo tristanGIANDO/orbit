@@ -1,18 +1,18 @@
 import math
 from solar_system_cartography import envs, utils
-from solar_system_cartography.database import Database
-
 class Star():
-    def __init__(self, project_path:str, name:str, mass:str) -> None:
+    def __init__(self, name:str, mass:str, parent:str=envs.ORIGIN, children:list=[]) -> None:
         self._name = name
         self._mass = mass
         self._type = "Star"
-
-        self._db = Database(project_path)
-        self._db.insert_object(self.read())
+        self._parent = parent
+        self._children = children
 
     def get_name(self) ->str:
         return self._name
+    
+    def get_parent(self) ->str:
+        return self._parent
     
     def get_type(self) ->str:
         return self._type
@@ -20,9 +20,9 @@ class Star():
     def get_mass(self) ->float:
         return self._mass
     
-    def get_influences(self, names:list) ->list:
+    def get_influences(self) ->list:
         influences = []
-        for obj in [self._db.find_object(name) for name in names]:
+        for obj in self._children:
             obj = obj[0]
             mass = obj[3]
             influence = self.get_object_influence(mass)
@@ -37,16 +37,17 @@ class Star():
     
     def read(self) ->dict:
         return {
-            "name" : self.get_name(),
-            "type" : self.get_type(),
-            "mass" : self.get_mass()
+            envs.E_NAME : self.get_name(),
+            envs.E_TYPE : self.get_type(),
+            envs.E_PARENT : self.get_parent(),
+            envs.E_MASS : self.get_mass()
         }
 
 class ObjectInOrbit():
-    def __init__(self, project_path:str, object_name:str, object_type:str, object_parent:str, object_mass:float, semi_major_axis:float,
+    def __init__(self, object_name:str, object_type:str, object_parent:str, object_mass:float, semi_major_axis:float,
                  inclination:float, eccentricity:float, rotation_period:float,
                  axis_inclination:float, ascending_node:float, arg_periapsis:float, object_radius:float=0.05,
-                 attraction_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1]) -> None:
+                 parent_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1]) -> None:
         
         if not object_name:
             raise RuntimeError("What is the name of the object ? Specify 'object_name'")
@@ -62,14 +63,13 @@ class ObjectInOrbit():
         self._name = object_name
         self._type = object_type
         self._parent = object_parent
+        self._mass = object_mass
+        self._rotation_period = rotation_period
+        self._axis_inclination = axis_inclination
         self._semi_major_axis = semi_major_axis
         self._inclination = inclination
         self._eccentricity = eccentricity
-        self._attraction_mass = attraction_mass
-        self._mass = object_mass
-        self._radius = object_radius
-        self._rotation_period = rotation_period
-        self._axis_inclination = axis_inclination
+        self._parent_mass = parent_mass
         self._perihelion_day = random_perihelion_day
         self._arg_periapsis = arg_periapsis
         self._ascending_node = ascending_node
@@ -80,9 +80,7 @@ class ObjectInOrbit():
         self._perihelion_velocity = self.set_perihelion_velocity()
         self._aphelion_distance = self.set_aphelion_distance()
         self._aphelion_velocity = self.set_aphelion_velocity()
-
-        db = Database(project_path)
-        db.insert_object(self.read())
+        self._radius = object_radius
 
     def __repr__(self) -> str:
         return f"""
@@ -111,25 +109,25 @@ class ObjectInOrbit():
     
     def read(self) ->dict:
         return {
-            "name" : self.get_name(),
-            "type" : self.get_type(),
-            "parent" : self.get_parent(),
-            "mass" : self.get_mass(),
-            "rotation_period" : self.get_rotation_period(),
-            "axis_inclination" : self.get_axis_inclination(),
-            "semi_major_axis" : self.get_semi_major_axis(),
-            "semi_minor_axis" : self.get_semi_minor_axis(),
-            "inclination" : self.get_inclination(),
-            "eccentricity" : self.get_eccentricity(),
-            "period" : self.get_orbital_period(),
-            "ascending_node" : self.get_ascending_node(),
-            "arg_periapsis" : self.get_arg_periapsis(),
-            "circumference" : self.get_orbital_circumference(),
-            "distance_at_perihelion" : self.get_perihelion_distance(),
-            "velocity_at_perihelion" : self.get_perihelion_velocity(),
-            "distance_at_aphelion" : self.get_aphelion_distance(),
-            "velocity_at_aphelion" : self.get_aphelion_velocity(),
-            "perihelion_day" : self.get_random_perihelion_day()
+            envs.E_NAME : self.get_name(),
+            envs.E_TYPE : self.get_type(),
+            envs.E_PARENT : self.get_parent(),
+            envs.E_MASS : self.get_mass(),
+            envs.E_PERIOD : self.get_rotation_period(),
+            envs.E_INCLINATION : self.get_axis_inclination(),
+            envs.O_SEMI_MAJOR_AXIS : self.get_semi_major_axis(),
+            envs.O_INCLINATION : self.get_inclination(),
+            envs.O_ECCENTRICITY : self.get_eccentricity(),
+            envs.O_ASCENDING_NODE : self.get_ascending_node(),
+            envs.O_ARG_PERIAPSIS : self.get_arg_periapsis(),
+            envs.O_PERIHELION_DAY : self.get_random_perihelion_day(),
+            envs.O_SEMI_MINOR_AXIS : self.get_semi_minor_axis(),
+            envs.O_PERIOD : self.get_orbital_period(),
+            envs.O_CIRCUMFERENCE : self.get_orbital_circumference(),
+            envs.O_PERIHELION_D : self.get_perihelion_distance(),
+            envs.O_PERIHELION_V : self.get_perihelion_velocity(),
+            envs.O_APHELION_D : self.get_aphelion_distance(),
+            envs.O_APHELION_V : self.get_aphelion_velocity()
         }
     
     def get_name(self) ->str:
@@ -180,7 +178,7 @@ class ObjectInOrbit():
         complete revolution around the Sun from its distance from the Sun.
         """
         # Using Kepler's law to calculate the orbital period (T)
-        orbital_period = 2 * math.pi * math.sqrt((utils.convert_au_to_meters(self._semi_major_axis)**3) / (envs.G * self._attraction_mass))
+        orbital_period = 2 * math.pi * math.sqrt((utils.convert_au_to_meters(self._semi_major_axis)**3) / (envs.G * self._parent_mass))
         
         # Conversion to days
         return orbital_period / (60 * 60 * 24)
@@ -211,7 +209,7 @@ class ObjectInOrbit():
         Returns:
             float: The velocity in meters
         """
-        return math.sqrt(envs.G * (self._attraction_mass + self._mass) * (2 / utils.convert_au_to_meters(self._perihelion_distance) - 1 / utils.convert_au_to_meters(self._semi_major_axis)))
+        return math.sqrt(envs.G * (self._parent_mass + self._mass) * (2 / utils.convert_au_to_meters(self._perihelion_distance) - 1 / utils.convert_au_to_meters(self._semi_major_axis)))
 
     def get_aphelion_distance(self) ->float:
         return self._aphelion_distance
@@ -228,7 +226,7 @@ class ObjectInOrbit():
         Returns:
             float: The velocity in meters
         """
-        return math.sqrt(envs.G * (self._attraction_mass + self._mass) * (2 / utils.convert_au_to_meters(self._aphelion_distance) - 1 / utils.convert_au_to_meters(self._semi_major_axis)))
+        return math.sqrt(envs.G * (self._parent_mass + self._mass) * (2 / utils.convert_au_to_meters(self._aphelion_distance) - 1 / utils.convert_au_to_meters(self._semi_major_axis)))
 
     def get_orbital_circumference(self) ->float:
         return self._orbital_circumference

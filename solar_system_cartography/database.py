@@ -1,4 +1,5 @@
 import os, sqlite3
+from solar_system_cartography import envs
 
 class Database():
     def __init__(self, project_path:str) -> None:
@@ -11,90 +12,89 @@ class Database():
         self.create()
 
     def connect(self):
-        return sqlite3.connect(os.path.join(self._path, f"{self._name}.db"))
+        return sqlite3.connect(os.path.join(self._path, f"{self._name}_database.db"))
 
     def _row_exists(self, name:str) ->bool:
         for file in self.read():
-            if file[1] == name:
+            if file[0] == name:
                 return True
             
     def create(self) ->None:
         self._cursor.execute(f"""
                 CREATE TABLE IF NOT EXISTS {self._name}
                 (
-                    [id] INT AUTO_INCREMENT PRIMARY KEY,
-                    [name] TEXT,
-                    [type] TEXT,
-                    [parent] TEXT,
-                    [mass] REAL,
-                    [rotation_period] REAL,
-                    [axis_inclination] REAL,
-                    [semi_major_axis] REAL,
-                    [semi_minor_axis] REAL,
-                    [inclination] REAL,
-                    [eccentricity] REAL,
-                    [period] REAL,
-                    [ascending_node] REAL,
-                    [arg_periapsis] REAL,
-                    [circumference] REAL,
-                    [distance_at_perihelion] REAL,
-                    [velocity_at_perihelion] REAL,
-                    [distance_at_aphelion] REAL,
-                    [velocity_at_aphelion] REAL,
-                    [perihelion_day] TEXT
+                    {envs.E_NAME} TEXT,
+                    {envs.E_TYPE} TEXT,
+                    {envs.E_PARENT} TEXT,
+                    {envs.E_MASS} REAL,
+                    {envs.E_PERIOD} REAL,
+                    {envs.E_INCLINATION} REAL,
+                    {envs.O_SEMI_MAJOR_AXIS} REAL,
+                    {envs.O_INCLINATION} REAL,
+                    {envs.O_ECCENTRICITY} REAL,
+                    {envs.O_ASCENDING_NODE} REAL,
+                    {envs.O_ARG_PERIAPSIS} REAL,
+                    {envs.O_PERIHELION_DAY} TEXT,
+                    {envs.O_SEMI_MINOR_AXIS} REAL,
+                    {envs.O_PERIOD} REAL,
+                    {envs.O_CIRCUMFERENCE} REAL,
+                    {envs.O_PERIHELION_D} REAL,
+                    {envs.O_PERIHELION_V} REAL,
+                    {envs.O_APHELION_D} REAL,
+                    {envs.O_APHELION_V} REAL  
                 )
                 """)
 
     def insert_object(self, data:dict) ->None:
-        object_name = data["name"]
+        object_name = data[envs.E_NAME]
         if self._row_exists(object_name):
             self.delete_object(object_name)
 
         self._cursor.execute(f"""
                 INSERT INTO {self._name}
                 (
-                    name,
-                    type,
-                    parent,
-                    mass,
-                    rotation_period,
-                    axis_inclination,
-                    semi_major_axis,
-                    semi_minor_axis,
-                    inclination,
-                    eccentricity,
-                    period,
-                    ascending_node,
-                    arg_periapsis,
-                    circumference,
-                    distance_at_perihelion,
-                    velocity_at_perihelion,
-                    distance_at_aphelion,
-                    velocity_at_aphelion,
-                    perihelion_day
+                    {envs.E_NAME},
+                    {envs.E_TYPE},
+                    {envs.E_PARENT},
+                    {envs.E_MASS},
+                    {envs.E_PERIOD},
+                    {envs.E_INCLINATION},
+                    {envs.O_SEMI_MAJOR_AXIS},
+                    {envs.O_INCLINATION},
+                    {envs.O_ECCENTRICITY},
+                    {envs.O_ASCENDING_NODE},
+                    {envs.O_ARG_PERIAPSIS},
+                    {envs.O_PERIHELION_DAY},
+                    {envs.O_SEMI_MINOR_AXIS},
+                    {envs.O_PERIOD},
+                    {envs.O_CIRCUMFERENCE},
+                    {envs.O_PERIHELION_D},
+                    {envs.O_PERIHELION_V},
+                    {envs.O_APHELION_D},
+                    {envs.O_APHELION_V}
                 )
 
                 VALUES
                 (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """, (object_name,
-                      data["type"],
-                      data["parent"],
-                      data["mass"],
-                      data.get("rotation_period",0),
-                      data.get("axis_inclination",0),
-                      data.get("semi_major_axis",0),
-                      data.get("semi_minor_axis",0),
-                      data.get("inclination",0),
-                      data.get("eccentricity",0),
-                      data.get("period",0),
-                      data.get("ascending_node",0),
-                      data.get("arg_periapsis",0),
-                      data.get("circumference",0),
-                      data.get("distance_at_perihelion",0),
-                      data.get("velocity_at_perihelion",0),
-                      data.get("distance_at_aphelion",0),
-                      data.get("velocity_at_aphelion",0),
-                      str(data.get("perihelion_day","")),
+                      data[envs.E_TYPE],
+                      data[envs.E_PARENT],
+                      data[envs.E_MASS],
+                      data.get(envs.E_PERIOD,0),
+                      data.get(envs.E_INCLINATION,0),
+                      data.get(envs.O_SEMI_MAJOR_AXIS,0),
+                      data.get(envs.O_INCLINATION,0),
+                      data.get(envs.O_ECCENTRICITY,0),
+                      data.get(envs.O_ASCENDING_NODE,0),
+                      data.get(envs.O_ARG_PERIAPSIS,0),
+                      str(data.get(envs.O_PERIHELION_DAY,"")),
+                      data.get(envs.O_SEMI_MINOR_AXIS,0),
+                      data.get(envs.O_PERIOD,0),
+                      data.get(envs.O_CIRCUMFERENCE,0),
+                      data.get(envs.O_PERIHELION_D,0),
+                      data.get(envs.O_PERIHELION_V,0),
+                      data.get(envs.O_APHELION_D,0),
+                      data.get(envs.O_APHELION_V,0),
                       )
                 )
 
@@ -105,21 +105,13 @@ class Database():
         return self._cursor.fetchall()
     
     def find_object(self, name:str):
-        self._cursor.execute(f"SELECT * FROM {self._name} WHERE name = '{name}'")
+        self._cursor.execute(f"SELECT * FROM {self._name} WHERE {envs.E_NAME} = '{name}'")
         return self._cursor.fetchall()
     
     def delete_object(self, name:str):
-        sql = f"DELETE FROM {self._name} WHERE name = '{name}'"
+        sql = f"DELETE FROM {self._name} WHERE {envs.E_NAME} = '{name}'"
         self._cursor.execute(sql)
         self._db.commit()
-
-    def update(self, column:str, id:str, new_value:str):
-        try:
-            sql = f"UPDATE {self._name} SET {column} = '{new_value}' WHERE (id = '{str(id)}')"
-            self._cursor.execute(sql)
-            self._db.commit()
-        except:
-            pass
 
     def close(self) ->None:
         self._db.close()

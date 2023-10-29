@@ -1,19 +1,18 @@
 import os, sys
 from functools import partial
 from solar_system_cartography.Qt import QtWidgets, QtGui, QtCore
-from solar_system_cartography.api import ObjectInOrbit, Star
-from solar_system_cartography.envs import PRESETS
-from solar_system_cartography.database import Database
+from solar_system_cartography import envs
+from solar_system_cartography.presets import PRESETS
+from solar_system_cartography.build import Build
 
 try:
-    from solar_system_cartography.rig import Rig
     from maya import OpenMayaUI as omui
     from shiboken2 import wrapInstance
     STANDALONE = False
 except:
     STANDALONE = True
 
-TYPES = ["Planet", "Star", "Comet", "Natural Satellite", "Artificial Satellite", "Asteroid", "Random"]
+
 
 HEADERS = ["Name", "Type", "Parent", "Mass (kg)", "Rotation Period (d)", "Axis Inclination (°)",
            "Semi Major Axis (AU)", "Semi Minor Axis (AU)", "Inclination (°)", "Eccentricity",
@@ -21,25 +20,15 @@ HEADERS = ["Name", "Type", "Parent", "Mass (kg)", "Rotation Period (d)", "Axis I
            "Perihelion Distance (AU)","Perihelion Speed (m/s)","Aphelion Distance (AU)",
             "Aphelion Speed (m/s)","Perihelion Date"]
 
-COLORS = {
-    TYPES[0] : [255,255,255],
-    TYPES[1] : [0,0,0],
-    TYPES[2] : [0,0,255],
-    TYPES[3] : [255,0,0],
-    TYPES[4] : [0,255,0],
-    TYPES[5] : [80,20,255],
-    TYPES[6] : [50,50,50],
-}
-
 class CustomTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, data:dict):
         super(CustomTreeItem, self).__init__()
         if not data:
             return
         self._data = data
-        if data and len(data) >= 17:
-            for i in range(17):
-                self.setText(i, str(data[i+1]))
+        if data:
+            for i in range(19):
+                self.setText(i, str(data[i]))
 
 class MainUI(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
@@ -47,7 +36,7 @@ class MainUI(QtWidgets.QMainWindow):
 
         self._title = "ORBIT"
         self._version = "dev"
-        self._db = None
+        self._builder = None
         self.setWindowTitle(f"{self._title} v-{self._version}")
         self.setGeometry(100, 100, 600, 400)
         central_widget = QtWidgets.QWidget()
@@ -93,11 +82,11 @@ class MainUI(QtWidgets.QMainWindow):
         glob_group_box = QtWidgets.QGroupBox("GLOBAL")
         object_grid_layout = QtWidgets.QGridLayout()
         self.glob_data = {}
-        self.glob_data["name"] = QtWidgets.QLineEdit()
-        self.glob_data["name"].setPlaceholderText("Object name")
-        self.glob_data["type"] = QtWidgets.QComboBox()
-        self.glob_data["type"].addItems(TYPES)
-        self.glob_data["parent"] = QtWidgets.QComboBox()
+        self.glob_data[envs.E_NAME] = QtWidgets.QLineEdit()
+        self.glob_data[envs.E_NAME].setPlaceholderText("Object name")
+        self.glob_data[envs.E_TYPE] = QtWidgets.QComboBox()
+        self.glob_data[envs.E_TYPE].addItems(envs.TYPES)
+        self.glob_data[envs.E_PARENT] = QtWidgets.QComboBox()
         i = 1      
         for lbl,box in self.glob_data.items():
             object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -110,12 +99,12 @@ class MainUI(QtWidgets.QMainWindow):
         object_group_box = QtWidgets.QGroupBox("PHYSICAL CHARACTERISTICS")
         object_grid_layout = QtWidgets.QGridLayout()
         self.obj_data = {}
-        self.obj_data["mass"] = QtWidgets.QLineEdit()
-        self.obj_data["mass"].setPlaceholderText("Object mass (kg)")
-        self.obj_data["day"] = QtWidgets.QLineEdit()
-        self.obj_data["day"].setPlaceholderText("Number of earth days to complete a full circle on its axis")
-        self.obj_data["axis_inclination"] = QtWidgets.QLineEdit()
-        self.obj_data["axis_inclination"].setPlaceholderText("Inclination of the object on its axis (°)")
+        self.obj_data[envs.E_MASS] = QtWidgets.QLineEdit()
+        self.obj_data[envs.E_MASS].setPlaceholderText("Object mass (kg)")
+        self.obj_data[envs.E_PERIOD] = QtWidgets.QLineEdit()
+        self.obj_data[envs.E_PERIOD].setPlaceholderText("Number of earth days to complete a full circle on its axis")
+        self.obj_data[envs.E_INCLINATION] = QtWidgets.QLineEdit()
+        self.obj_data[envs.E_INCLINATION].setPlaceholderText("Inclination of the object on its axis (°)")
         i = 1      
         for lbl,box in self.obj_data.items():
             object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -128,18 +117,18 @@ class MainUI(QtWidgets.QMainWindow):
         orbital_group_box = QtWidgets.QGroupBox("ORBITAL CHARACTERISTICS")
         orbital_grid_layout = QtWidgets.QGridLayout()
         self.orb_data = {}
-        self.orb_data["semi_major_axis"] = QtWidgets.QLineEdit()
-        self.orb_data["semi_major_axis"].setPlaceholderText("Semi major axis of the orbit (AU)")
-        self.orb_data["inclination"] = QtWidgets.QLineEdit()
-        self.orb_data["inclination"].setPlaceholderText("Inclination of the orbit (°)")
-        self.orb_data["eccentricity"] = QtWidgets.QLineEdit()
-        self.orb_data["eccentricity"].setPlaceholderText("Eccentricity of the orbit")
-        self.orb_data["arg_periapsis"] = QtWidgets.QLineEdit()
-        self.orb_data["arg_periapsis"].setPlaceholderText("Periapsis argument (°)")
-        self.orb_data["ascending_node"] = QtWidgets.QLineEdit()
-        self.orb_data["ascending_node"].setPlaceholderText("Ascending node (°)")
-        self.orb_data["random_perihelion_day"] = QtWidgets.QDateEdit()
-        self.orb_data["random_perihelion_day"].setDisplayFormat("yyyy, MM, dd")
+        self.orb_data[envs.O_SEMI_MAJOR_AXIS] = QtWidgets.QLineEdit()
+        self.orb_data[envs.O_SEMI_MAJOR_AXIS].setPlaceholderText("Semi major axis of the orbit (AU)")
+        self.orb_data[envs.O_INCLINATION] = QtWidgets.QLineEdit()
+        self.orb_data[envs.O_INCLINATION].setPlaceholderText("Inclination of the orbit (°)")
+        self.orb_data[envs.O_ECCENTRICITY] = QtWidgets.QLineEdit()
+        self.orb_data[envs.O_ECCENTRICITY].setPlaceholderText("Eccentricity of the orbit")
+        self.orb_data[envs.O_ARG_PERIAPSIS] = QtWidgets.QLineEdit()
+        self.orb_data[envs.O_ARG_PERIAPSIS].setPlaceholderText("Periapsis argument (°)")
+        self.orb_data[envs.O_ASCENDING_NODE] = QtWidgets.QLineEdit()
+        self.orb_data[envs.O_ASCENDING_NODE].setPlaceholderText("Ascending node (°)")
+        self.orb_data[envs.O_PERIHELION_DAY] = QtWidgets.QDateEdit()
+        self.orb_data[envs.O_PERIHELION_DAY].setDisplayFormat("yyyy, MM, dd")
         i = 1      
         for lbl,box in self.orb_data.items():
             orbital_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -176,9 +165,9 @@ class MainUI(QtWidgets.QMainWindow):
         visu_group_box = QtWidgets.QGroupBox("COLORS")
         visu_grid_layout = QtWidgets.QGridLayout()
         self.visu_data = {}
-        for typ in TYPES:
+        for typ in envs.TYPES:
             self.visu_data[typ] = QtWidgets.QLineEdit()
-            self.visu_data[typ].setText(str(COLORS[typ]))
+            self.visu_data[typ].setText(str(envs.COLORS[typ]))
         i = 1      
         for lbl,box in self.visu_data.items():
             visu_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -194,13 +183,13 @@ class MainUI(QtWidgets.QMainWindow):
         self.reload_tree()
 
     def reload_parents(self) ->None:
-        parents = ["origin"] + [p[1] for p in self._db.read()]
-        self.glob_data["parent"].clear()
-        self.glob_data["parent"].addItems(parents)
+        parents = [envs.ORIGIN] + [p[0] for p in self._builder.read()]
+        self.glob_data[envs.E_PARENT].clear()
+        self.glob_data[envs.E_PARENT].addItems(parents)
 
     def reload_tree(self) ->None:
         self.tree.clear()
-        objects = self._db.read()
+        objects = self._builder.read()
         if not objects:
             return
   
@@ -223,46 +212,51 @@ class MainUI(QtWidgets.QMainWindow):
         self.create_button.clicked.connect(self.on_create_button_clicked)
 
     def read(self) ->dict:
-        date = self.orb_data.get("random_perihelion_day").date().toString("yyyy.MM.dd").split(".")
+        date = self.orb_data.get(envs.O_PERIHELION_DAY).date().toString("yyyy.MM.dd").split(".")
         date = [int(d) for d in date]
-        typ = self.glob_data["type"].currentText()
-        if typ == "Star":
-            return {
-                "name" : self.glob_data["name"].text(),
-                "type" : typ,
-                "mass" : float(self.obj_data.get("mass").text())
-                }
+        typ = self.glob_data[envs.E_TYPE].currentText()
+        if typ == envs.T_STAR:
+            return [
+                self.glob_data[envs.E_NAME].text(),
+                typ,
+                self.glob_data[envs.E_PARENT].currentText(),
+                float(self.obj_data.get(envs.E_MASS).text())
+            ]
         
-        return {
-            "name" : self.glob_data["name"].text(),
-            "type" : typ,
-            "parent" : self.glob_data["parent"].currentText(),
-            "mass" : float(self.obj_data.get("mass").text()),
-            "day" : float(self.obj_data.get("day").text()),
-            "axis_inclination" : float(self.obj_data.get("axis_inclination").text()),
-            "semi_major_axis" : float(self.orb_data.get("semi_major_axis").text()),
-            "inclination" : float(self.orb_data.get("inclination").text()),
-            "eccentricity" : float(self.orb_data.get("eccentricity").text()),
-            "arg_periapsis" : float(self.orb_data.get("arg_periapsis").text()),
-            "ascending_node" : float(self.orb_data.get("ascending_node").text()),
-            "random_perihelion_day" : date
-        }
+        return [
+            self.glob_data[envs.E_NAME].text(),
+            typ,
+            self.glob_data[envs.E_PARENT].currentText(),
+            float(self.obj_data.get(envs.E_MASS).text()),
+            float(self.obj_data.get(envs.E_PERIOD).text()),
+            float(self.obj_data.get(envs.E_INCLINATION).text()),
+            float(self.orb_data.get(envs.O_SEMI_MAJOR_AXIS).text()),
+            float(self.orb_data.get(envs.O_INCLINATION).text()),
+            float(self.orb_data.get(envs.O_ECCENTRICITY).text()),
+            float(self.orb_data.get(envs.O_ASCENDING_NODE).text()),
+            float(self.orb_data.get(envs.O_ARG_PERIAPSIS).text()),
+            date
+        ]
     
     def on_preset_triggered(self, name) ->None:
-        d = PRESETS.get(name)
-        self.glob_data["name"].setText(name)
-        self.obj_data["mass"].setText(str(d["mass"]))
-        self.obj_data["day"].setText(str(d["day"]))
-        self.obj_data["axis_inclination"].setText(str(d["axis_inclination"]))
-        self.orb_data["semi_major_axis"].setText(str(d["semi_major_axis"]))
-        self.orb_data["inclination"].setText(str(d["inclination"]))
-        self.orb_data["eccentricity"].setText(str(d["eccentricity"]))
-        self.orb_data["arg_periapsis"].setText(str(d["arg_periapsis"]))
-        self.orb_data["ascending_node"].setText(str(d["ascending_node"]))
-        q_date = QtCore.QDate(d["random_perihelion_day"][0],
-                              d["random_perihelion_day"][1],
-                              d["random_perihelion_day"][2])
-        self.orb_data["random_perihelion_day"].setDate(q_date) 
+        for preset in PRESETS:
+            if preset[0] == name:
+                self.glob_data[envs.E_NAME].setText(name)
+                self.glob_data[envs.E_TYPE].setItemText(0, preset[1])
+                self.glob_data[envs.E_PARENT].setItemText(0, preset[2])
+                self.obj_data[envs.E_MASS].setText(str(preset[3]))
+                self.obj_data[envs.E_PERIOD].setText(str(preset[4]))
+                self.obj_data[envs.E_INCLINATION].setText(str(preset[5]))
+                self.orb_data[envs.O_SEMI_MAJOR_AXIS].setText(str(preset[6]))
+                self.orb_data[envs.O_INCLINATION].setText(str(preset[7]))
+                self.orb_data[envs.O_ECCENTRICITY].setText(str(preset[8]))
+                self.orb_data[envs.O_ASCENDING_NODE].setText(str(preset[9]))
+                self.orb_data[envs.O_ARG_PERIAPSIS].setText(str(preset[10]))
+                q_date = QtCore.QDate(preset[11][0],
+                                      preset[11][1],
+                                      preset[11][2])
+                self.orb_data[envs.O_PERIHELION_DAY].setDate(q_date)
+                break
 
     def show_color_dialog(self, typ:str):
         color = QtWidgets.QColorDialog.getColor()
@@ -270,7 +264,7 @@ class MainUI(QtWidgets.QMainWindow):
         if color.isValid():
             self.visu_data[typ].setStyleSheet(f"background-color: {color.name()};")
             # add to general dict
-            COLORS[typ] = [color.red()/255,color.green()/255,color.blue()/255]
+            envs.COLORS[typ] = [color.red()/255,color.green()/255,color.blue()/255]
 
     def show_project_dialog(self):
         options = QtWidgets.QFileDialog.Options()
@@ -284,72 +278,13 @@ class MainUI(QtWidgets.QMainWindow):
         if project_path:
             self._project_path = project_path
             self.root_project_line_edit.setText(project_path)
-            self._db = Database(project_path)
+            self._builder = Build(project_path)
             self.reload()
-            self.build_from_tree()
+            self._builder.all()
             
-    def build_from_tree(self) ->None:
-        items = []
-        def get_items(tree_item):
-            try:
-                items.append(tree_item._data)
-            except:
-                "is invisibleRootItem"
-            for i in range(tree_item.childCount()):
-                get_items(tree_item.child(i))
-
-        get_items(self.tree.invisibleRootItem())
-        
-        for item in items:
-            try:
-                date = eval(item[-1])
-            except:
-                date = [2000,1,1]
-            data = {
-                "name" : item[1],
-                "type" : item[2],
-                "parent" : item[3],
-                "mass" : item[4],
-                "day" : item[5],
-                "axis_inclination" : item[6],
-                "semi_major_axis" : item[7],
-                "inclination" : item[9],
-                "eccentricity" : item[10],
-                "arg_periapsis" : item[13],
-                "ascending_node" : item[12],
-                "random_perihelion_day" : date
-            }
-            self.build_rig(data)
-
     def on_create_button_clicked(self) ->None:
-        self.build_rig(self.read())
+        self._builder.element(self.read())
         self.reload()
-    
-    def build_rig(self, d:dict) ->None:
-        if d["type"] == "Star":
-            obj = Star(project_path=self._project_path,
-                       name=d["name"],
-                       mass=d["mass"])
-        else:
-            obj = ObjectInOrbit(project_path=self._project_path,
-                            object_name=d["name"],
-                            object_type=d["type"],
-                            object_mass=d["mass"],
-                            object_parent=d["parent"],
-                            semi_major_axis=d["semi_major_axis"],
-                            inclination=d["inclination"],
-                            eccentricity=d["eccentricity"],
-                            rotation_period=d["day"],
-                            arg_periapsis=d["arg_periapsis"],
-                            ascending_node=d["ascending_node"],
-                            axis_inclination=d["axis_inclination"],
-                            random_perihelion_day=d["random_perihelion_day"]
-                            )
-        
-        self.reload_tree()
-        
-        if not STANDALONE:
-            rig = Rig(obj, COLORS[d["type"]])
 
 class Icons():
     def __init__(self):
