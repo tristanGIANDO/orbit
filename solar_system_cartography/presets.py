@@ -13,21 +13,38 @@ PRESETS = [
         48.33,
         29.12,
         [2000,11,24]
+    ),
+    (
+        "Earth",
+        envs.T_PLANET,
+        envs.ORIGIN,
+        5.972e24,
+        0.99726949,
+        23.4366907752,
+        1.0000001124,
+        0,
+        0.01671022,
+        174.873,
+        288.064,
+        [2023,1,4]
+    ),
+    (
+        "Moon",
+        envs.T_NAT_SAT,
+        "Earth",
+        0.07346e24,
+        27.321582,
+        6.687,
+        0.00257,
+        5.145396,
+        0.0549,
+        291.682547,
+        0, # wrong
+        [2023,10,26]
     )
 ]
 
 OLD_PRESETS = {
-    "Mercury" : {
-        "semi_major_axis" : 0.38709808989279954,
-        "inclination" : 7.004,
-        "eccentricity" : 0.2056,
-        "mass" : 0.330e24,
-        "rotation_period" : 58.6458,
-        "axis_inclination" : 0.03,
-        "ascending_node" : 48.33,
-        "arg_periapsis" : 29.12,
-        "random_perihelion_day" : [2000,11,24]
-    },
     "Venus" : {
         "semi_major_axis" : 0.723336,
         "inclination" : 3.39471,
@@ -38,17 +55,6 @@ OLD_PRESETS = {
         "ascending_node" :76.68,
         "arg_periapsis" : 54.9,
         "random_perihelion_day" : [2023,4,17]
-    },
-    "Earth" : {
-        "semi_major_axis" : 1.0000001124,
-        "inclination" : 0,
-        "eccentricity" : 0.01671022,
-        "mass" : 5.972e24,
-        "rotation_period" : 0.99726949,
-        "axis_inclination" : 23.4366907752,
-        "ascending_node" :174.873,
-        "arg_periapsis" : 288.064,
-        "random_perihelion_day" :[2023,1,4]
     },
     "Mars" : {
         "semi_major_axis" : 1.52368055,

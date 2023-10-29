@@ -37,6 +37,14 @@ class Build():
         if elem[1] == envs.T_STAR: #type
             obj = Star(elem[0], elem[3], elem[2], self._children)
         else:
+            parent = self._db.find_object(elem[2])
+            print("parent ->",parent)
+            if parent:
+                parent_mass = parent[0][3]
+                print(parent[0][3])
+            else:
+                parent_mass = envs.SOLAR_MASS
+            
             obj = ObjectInOrbit(
                         object_name = elem[0],
                         object_type = elem[1],
@@ -49,7 +57,8 @@ class Build():
                         eccentricity = elem[8],
                         ascending_node = elem[9],
                         arg_periapsis = elem[10],
-                        random_perihelion_day = elem[11]
+                        random_perihelion_day = elem[11],
+                        parent_mass = parent_mass
                         )
             
         self._db.insert_object(obj.read())

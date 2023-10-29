@@ -14,11 +14,25 @@ except:
 
 
 
-HEADERS = ["Name", "Type", "Parent", "Mass (kg)", "Rotation Period (d)", "Axis Inclination (°)",
-           "Semi Major Axis (AU)", "Semi Minor Axis (AU)", "Inclination (°)", "Eccentricity",
-           "Orbital Period (d)","Ascending Node (°)","Periapsis Argument (°)","Circumference (m)",
-           "Perihelion Distance (AU)","Perihelion Speed (m/s)","Aphelion Distance (AU)",
-            "Aphelion Speed (m/s)","Perihelion Date"]
+HEADERS = ["Name",
+           "Type",
+           "Parent",
+           "Mass (kg)",
+           "Rotation Period (d)",
+           "Axis Inclination (°)",
+           "Semi Major Axis (AU)",
+           "Inclination (°)",
+           "Eccentricity",
+           "Ascending Node (°)",
+           "Periapsis Argument (°)",
+           "Perihelion Date",
+           "Semi Minor Axis (AU)",  
+           "Orbital Period (d)",
+           "Circumference (m)",
+           "Perihelion Distance (AU)",
+           "Perihelion Speed (m/s)",
+           "Aphelion Distance (AU)",
+           "Aphelion Speed (m/s)"]
 
 class CustomTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, data:dict):
@@ -202,10 +216,11 @@ class MainUI(QtWidgets.QMainWindow):
 
         self.presets_menu = self.menu_bar.addMenu("Presets")
         self.action = {}
-        for obj in ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto", "1P/Halley"]:
-            self.action[obj] = QtWidgets.QAction(obj, self)
-            self.presets_menu.addAction(self.action[obj])
-            self.action[obj].triggered.connect(partial(self.on_preset_triggered, obj))
+        for obj in PRESETS:
+            name = obj[0]
+            self.action[name] = QtWidgets.QAction(name, self)
+            self.presets_menu.addAction(self.action[name])
+            self.action[name].triggered.connect(partial(self.on_preset_triggered, name))
 
     def create_connections(self) ->None:
         self.set_project_button.clicked.connect(self.show_project_dialog)

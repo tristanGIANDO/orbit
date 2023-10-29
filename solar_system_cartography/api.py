@@ -45,8 +45,8 @@ class Star():
 class ObjectInOrbit():
     def __init__(self, object_name:str, object_type:str, object_parent:str, object_mass:float, semi_major_axis:float,
                  inclination:float, eccentricity:float, rotation_period:float,
-                 axis_inclination:float, ascending_node:float, arg_periapsis:float, object_radius:float=0.05,
-                 parent_mass:float = envs.SOLAR_MASS, random_perihelion_day:list[int] = [2000,1,1]) -> None:
+                 axis_inclination:float, ascending_node:float, arg_periapsis:float,
+                 parent_mass:float, random_perihelion_day:list[int] = [2000,1,1]) -> None:
         
         if not object_name:
             raise RuntimeError("What is the name of the object ? Specify 'object_name'")
@@ -79,7 +79,6 @@ class ObjectInOrbit():
         self._perihelion_velocity = self.set_perihelion_velocity()
         self._aphelion_distance = self.set_aphelion_distance()
         self._aphelion_velocity = self.set_aphelion_velocity()
-        self._radius = object_radius
 
     def __repr__(self) -> str:
         return f"""
@@ -173,14 +172,16 @@ class ObjectInOrbit():
     
     def set_orbital_period(self) ->float:
         """
-        Calculates the time in days that it takes for a star to make a
+        Calculates the time in days that it takes for an object to make a
         complete revolution around the Sun from its distance from the Sun.
         """
         # Using Kepler's law to calculate the orbital period (T)
+        print("major axis", self._semi_major_axis)
+        print("parent mass", self._parent_mass)
         orbital_period = 2 * math.pi * math.sqrt((utils.convert_au_to_meters(self._semi_major_axis)**3) / (envs.G * self._parent_mass))
         
         # Conversion to days
-        return orbital_period / (60 * 60 * 24)
+        return orbital_period / 86400
 
     def get_semi_minor_axis(self) ->float:
         return self._semi_minor_axis
