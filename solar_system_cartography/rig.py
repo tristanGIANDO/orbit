@@ -1,6 +1,6 @@
 from maya import cmds
 import math
-from solar_system_cartography.api import ObjectInOrbit, Star
+from solar_system_cartography.api import ObjectInOrbit
 from solar_system_cartography import envs
 
 class Rig():
@@ -19,9 +19,12 @@ class Rig():
             self._color.append(c)
 
         # not used yet
+        self._barycenter = "barycenter"
         self._group = f"{self._name}_group"
         self._offset = f"{self._name}_orbit_offset"
+        self._orbit = f"{self._name}_orbit"
         self._control = f"{self._name}_control"
+        self._follow = f"{self._name}_follow"
         
         self.build() # rebuilds too
 
@@ -70,10 +73,9 @@ class Rig():
         return self._obj.get_radius() / envs.AU
 
     def cr_barycenter(self) ->str:
-        name = "barycenter"
-        if not cmds.objExists(name):
-            cmds.spaceLocator(n=name)[0]
-        return name
+        if not cmds.objExists(self._barycenter):
+            cmds.spaceLocator(n=self._barycenter)[0]
+        return self._barycenter
 
     def cr_orbit(self) ->str:
         """Creates the orbit of the object
@@ -89,7 +91,7 @@ class Rig():
             str: The created orbit DAG node
         """
         # create orbit offset
-        offset = cmds.group(n=f"{self._name}_orbit_offset", em=True)
+        offset = cmds.group(n=self._offset, em=True)
         # create circle
         orbit = cmds.circle(nr=(0, 1, 0),
                             c=(0, 0, 0),
@@ -99,7 +101,7 @@ class Rig():
                             ut=0,
                             tol=0.01,
                             s=100,
-                            n=f"{self._name}_orbit")[0]
+                            n=self._orbit)[0]
 
         cmds.parent(orbit, offset)
 
@@ -123,59 +125,59 @@ class Rig():
 
         return orbit
 
-    def cr_hierarchy(self, orbit:str, offset:str) ->str:
-        group = cmds.group(n=f"{self._name}_group", em=True)
-        cmds.parent(f"{orbit}_offset", group)
-        cmds.parent(offset, group)
-        return group
+    def cr_hierarchy(self) ->str:
+        self._group = cmds.group(n=self._group, em=True)
+        cmds.parent(self._offset, self._group)
+        cmds.parent(self._follow, self._group)
+        return self._group
 
     def cr_offset(self) ->str:
-        return cmds.spaceLocator(n=f"{self._name}_follow")[0]
+        return cmds.spaceLocator(n=self._follow)[0]
 
-    def cr_control(self, offset:str) ->str:
-        control = cmds.spaceLocator(n=f"{self._name}_control")[0]
-        cmds.parent(control, offset)
-        cmds.matchTransform(control, offset)
-        return control
+    def cr_control(self) ->str:
+        cmds.spaceLocator(n=self._control)
+        cmds.parent(self._control, self._follow)
+        cmds.matchTransform(self._control, self._follow)
+        return self._control
 
-    def cr_geo(self, control:str, suffix:str="object", radius:float=0.1) ->str:
+    def cr_geo(self, suffix:str="object", radius:float=0.1) ->str:
         # obj = cmds.polySphere(n=f"{self._name}_geo", radius=0.05)[0]
-        cmds.select(control)
+        cmds.select(self._control)
         obj = cmds.joint(n=f"{self._name}_{suffix}", rad=radius)
         return obj
 
-    def cr_annotation(self, offset:str) ->str:
-        shape = cmds.annotate(offset, tx=self._name, p=(0, .5, .5) )
+    def cr_annotation(self) ->str:
+        shape = cmds.annotate(self._follow, tx=self._name, p=(0, .5, .5) )
         transform = cmds.listRelatives(shape, p=True)[0]
-        cmds.parent(transform,offset)
+        cmds.parent(transform,self._follow)
 
         # color
         cmds.setAttr(f"{shape}.overrideEnabled", True)
         cmds.setAttr(f"{shape}.overrideRGBColors", True)
         cmds.setAttr(f"{shape}.overrideColorRGB", *self._color)
 
-    def cstr_offset_orbit(self, orbit_name:str, offset_name):
+    def cstr_offset_orbit(self):
         poc = cmds.createNode("pointOnCurveInfo", n=f"{self._name}_POC")
-        curve_attr = f"{orbit_name}.worldSpace[0]"
+        curve_attr = f"{self._orbit}.worldSpace[0]"
         
         cmds.connectAttr(curve_attr, f"{poc}.inputCurve")
-        cmds.connectAttr(f"{poc}.position", f"{offset_name}.translate")
+        cmds.connectAttr(f"{poc}.position", f"{self._follow}.translate")
 
         return poc
 
-    def cstr_orbit_barycenter(self, orbit:str, barycenter:str) ->None:
-        cmds.connectAttr(f"{barycenter}.worldMatrix[0]", f"{orbit}.offsetParentMatrix", f=True)
+    def cstr_orbit_barycenter(self) ->None:
+        cmds.connectAttr(f"{self._barycenter}.worldMatrix[0]",
+                         f"{self._orbit}.offsetParentMatrix",
+                         f=True)
 
     def cstr_star(self, star:str) ->None:
         obj_suffix = "_object"
         names = [obj.split(f"{obj_suffix}")[0] for obj in cmds.ls(f"*{obj_suffix}", typ="joint")]
-        print(names)
-        influences = self._obj.get_influences(names)
-        print(influences)
-        names.insert(0, "barycenter")
+        influences = self._obj.get_influences()
+        names.insert(0, self._barycenter)
 
         for obj,value in zip(names,influences):
-            if obj != "barycenter":
+            if obj != self._barycenter:
                 obj = f"{obj}{obj_suffix}"
             cmds.parentConstraint(obj,
                                 star,
@@ -219,22 +221,22 @@ class Rig():
         cmds.keyTangent(f"{poc}.parameter", itt="spline", ott="spline")
         cmds.setInfinity(f"{poc}.parameter", pri="cycle", poi="cycle")
 
-    def anim_offset(self, control:str, offset:str) ->None:
-        cmds.setAttr(f"{offset}.rotateX", self._obj.get_axis_inclination())
+    def anim_offset(self) ->None:
+        cmds.setAttr(f"{self._follow}.rotateX", self._obj.get_axis_inclination())
 
-        cmds.setKeyframe(f"{control}.rotateY", v=0, t=0)
-        cmds.setKeyframe(f"{control}.rotateY", v=359, t=self._obj.get_rotation_period())
+        cmds.setKeyframe(f"{self._control}.rotateY", v=0, t=0)
+        cmds.setKeyframe(f"{self._control}.rotateY", v=359, t=self._obj.get_rotation_period())
 
-        cmds.keyTangent(f"{control}.rotateY", itt="spline", ott="spline")
-        cmds.setInfinity(f"{control}.rotateY", pri="cycle", poi="cycle")
+        cmds.keyTangent(f"{self._control}.rotateY", itt="spline", ott="spline")
+        cmds.setInfinity(f"{self._control}.rotateY", pri="cycle", poi="cycle")
 
     def delete(self) ->None:
-        for node in [self._group, self._offset, self._control]:
+        for node in [self._group, self._offset, self._control, self._follow, self._orbit]:
             if cmds.objExists(node):
                 cmds.delete(node)
 
     def build(self) ->None:
-        if self._type == "Star":
+        if self._type == envs.T_STAR:
             self.build_star()
         else:
             self.build_object_in_orbit()
@@ -244,32 +246,31 @@ class Rig():
         self.delete()
         # create new one
         
-        orbit = self.cr_orbit()
-        offset = self.cr_offset()
-        control = self.cr_control(offset)
-        geo = self.cr_geo(control)
-        self.cr_annotation(offset)
-        group = self.cr_hierarchy(orbit, offset)
-
-        poc = self.cstr_offset_orbit(orbit, offset)
+        self.cr_orbit()
+        self.cr_offset()
+        self.cr_control()
+        self.cr_geo()
+        self.cr_annotation()
+        self.cr_hierarchy()
+        poc = self.cstr_offset_orbit()
         parent = self._obj.get_parent()
 
         self.anim_orbit(poc)
-        self.anim_offset(control, offset)
+        self.anim_offset()
 
-        if parent == "origin":
-            barycenter = self.cr_barycenter()
-            self.cstr_obj_to_parent(orbit, barycenter)
+        if parent == envs.ORIGIN:
+            self._barycenter = self.cr_barycenter()
+            self.cstr_obj_to_parent(self._orbit, self._barycenter)
         else:
             parent = f"{parent}_follow"
-            self.cstr_obj_to_parent(orbit, parent)
+            self.cstr_obj_to_parent(self._orbit, parent)
     
     def build_star(self) ->None:
         self.delete()
-        barycenter = self.cr_barycenter()
-        offset = self.cr_offset()
-        control = self.cr_control(offset)
-        geo = self.cr_geo(control, "star", 0.5)
+        self.cr_barycenter()
+        self.cr_offset()
+        self.cr_control()
+        geo = self.cr_geo("star", 0.5)
         self.cstr_star(geo)
 
 if __name__ == "__main__":

@@ -55,7 +55,7 @@ class Build():
         self._db.insert_object(obj.read())
 
         if not STANDALONE:
-            rig = Rig(obj)
+            rig = Rig(obj, color=envs.COLORS[obj.get_type()])
 
     def read(self) ->list:
         return self._db.read()

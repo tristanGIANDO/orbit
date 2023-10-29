@@ -22,9 +22,8 @@ class Star():
     
     def get_influences(self) ->list:
         influences = []
-        for obj in self._children:
-            obj = obj[0]
-            mass = obj[3]
+        for child in self._children:
+            mass = child[3]
             influence = self.get_object_influence(mass)
             influences.append(influence)
         barycenter_influence = 1 - sum(influences)
@@ -33,7 +32,7 @@ class Star():
         return influences
     
     def get_object_influence(self, object_mass) ->float:
-        return object_mass / self._mass * 100
+        return float(object_mass) / float(self._mass) * 100
     
     def read(self) ->dict:
         return {
