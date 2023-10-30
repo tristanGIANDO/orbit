@@ -162,7 +162,9 @@ class ObjectInOrbit():
         return self._orbital_period
     
     def get_random_perihelion_day(self) ->list:
-        return eval(self._perihelion_day)
+        if not isinstance(self._perihelion_day, list):
+            return eval(self._perihelion_day)
+        return self._perihelion_day
     
     def get_arg_periapsis(self) ->float:
         return self._arg_periapsis

@@ -2,7 +2,7 @@ from solar_system_cartography.database import Database
 from solar_system_cartography.api import ObjectInOrbit, Star
 from solar_system_cartography import envs
 try:
-    from solar_system_cartography.rig import Rig
+    from solar_system_cartography.rig import Rig, File
     STANDALONE = False
 except:
     STANDALONE = True
@@ -28,17 +28,18 @@ class Build():
         self._elements = unparented + parented + stars
         self._children = unparented + parented
 
-    def all(self) ->None:
-        for elem in self._elements:
-            self.element(elem)
+        if not STANDALONE:
+            self._file = File()
 
-    def element(self, elem:list) ->None:
-        print(elem)
+    def all(self, rebuild:bool=True) ->None:
+        for elem in self._elements:
+            self.element(elem, rebuild)
+
+    def element(self, elem:list, rebuild:bool=True) ->None:
         if elem[1] == envs.T_STAR: #type
             obj = Star(elem[0], elem[3], elem[2], self._children)
         else:
             parent = self._db.find_object(elem[2])
-            print("parent ->",parent)
             if parent:
                 parent_mass = parent[0][3]
                 print(parent[0][3])
@@ -65,7 +66,17 @@ class Build():
 
         if not STANDALONE:
             rig = Rig(obj, color=envs.COLORS[obj.get_type()])
+            if rebuild == False:
+                if rig._exists():
+                    return
+            rig.build()
 
+    def open_file(self, path:str) ->None:
+        self._file.open_file(path)
+
+    def new_file(self) ->None:
+        self._file.new_file()
+        
     def read(self) ->list:
         return self._db.read()
     

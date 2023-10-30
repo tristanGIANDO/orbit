@@ -223,7 +223,7 @@ class MainUI(QtWidgets.QMainWindow):
             self.action[name].triggered.connect(partial(self.on_preset_triggered, name))
 
     def create_connections(self) ->None:
-        self.set_project_button.clicked.connect(self.show_project_dialog)
+        self.set_project_button.clicked.connect(self.on_set_project_clicked)
         self.create_button.clicked.connect(self.on_create_button_clicked)
 
     def read(self) ->dict:
@@ -281,7 +281,20 @@ class MainUI(QtWidgets.QMainWindow):
             # add to general dict
             envs.COLORS[typ] = [color.red()/255,color.green()/255,color.blue()/255]
 
-    def show_project_dialog(self):
+    def show_file_dialog(self, project_path:str):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.ReadOnly
+
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self,
+                                                            'Open existing file',
+                                                            project_path,
+                                                            "Fichiers Maya (*.ma *.mb)",
+                                                            options=options)
+
+        if file_path:
+            return file_path
+
+    def show_project_dialog(self) ->None:
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.ShowDirsOnly
 
@@ -291,12 +304,36 @@ class MainUI(QtWidgets.QMainWindow):
                                                                  options=options)
 
         if project_path:
-            self._project_path = project_path
-            self.root_project_line_edit.setText(project_path)
-            self._builder = Build(project_path)
+            return project_path
+        
+    def init_project(self):
+            self._project_path = self.show_project_dialog()
+            self.root_project_line_edit.setText(self._project_path)
+
+            # init database
+            self._builder = Build(self._project_path)
             self.reload()
-            self._builder.all()
             
+            # message box
+            if not STANDALONE:
+                message_box = QtWidgets.QMessageBox.information(
+                    self,
+                    "Open existing file ?", 
+                    f"Open existing file ?",
+                    QtWidgets.QMessageBox.Yes | 
+                    QtWidgets.QMessageBox.No)
+                if message_box == QtWidgets.QMessageBox.No:
+                    # build all in new scene
+                    self._builder.all()
+                else:
+                    # only open existing scene
+                    file = self.show_file_dialog(self._project_path)
+                    self._builder.open_file(file)
+                    self._builder.all(rebuild=False)
+
+    def on_set_project_clicked(self) ->None:
+        self.init_project()
+
     def on_create_button_clicked(self) ->None:
         self._builder.element(self.read())
         self.reload()

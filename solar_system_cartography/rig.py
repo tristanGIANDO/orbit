@@ -3,6 +3,17 @@ import math
 from solar_system_cartography.api import ObjectInOrbit
 from solar_system_cartography import envs
 
+class File():
+    def __init__(self) -> None:
+        pass
+    
+    def new_file(self) ->None:
+        cmds.file(new=True, force=True) 
+
+    def open_file(self, path:str) ->None:
+        self.new_file()
+        cmds.file(path, open=True)
+
 class Rig():
     def __init__(self, obj:ObjectInOrbit, color:list=None) ->None:
         self._obj = obj
@@ -25,8 +36,6 @@ class Rig():
         self._orbit = f"{self._name}_orbit"
         self._control = f"{self._name}_control"
         self._follow = f"{self._name}_follow"
-        
-        self.build() # rebuilds too
 
     def conform_name(self) ->str:
         "Removes all invalid characters from name"
@@ -273,5 +282,8 @@ class Rig():
         geo = self.cr_geo("star", 0.5)
         self.cstr_star(geo)
 
+    def _exists(self) ->bool:
+        return cmds.objExists(self._group)
+    
 if __name__ == "__main__":
     pass
