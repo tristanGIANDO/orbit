@@ -23,25 +23,25 @@ class Database():
         self._cursor.execute(f"""
                 CREATE TABLE IF NOT EXISTS {self._name}
                 (
-                    {envs.E_NAME} TEXT,
-                    {envs.E_TYPE} TEXT,
-                    {envs.E_PARENT} TEXT,
-                    {envs.E_MASS} REAL,
-                    {envs.E_PERIOD} REAL,
-                    {envs.E_INCLINATION} REAL,
-                    {envs.O_SEMI_MAJOR_AXIS} REAL,
-                    {envs.O_INCLINATION} REAL,
-                    {envs.O_ECCENTRICITY} REAL,
-                    {envs.O_ASCENDING_NODE} REAL,
-                    {envs.O_ARG_PERIAPSIS} REAL,
-                    {envs.O_PERIHELION_DAY} TEXT,
-                    {envs.O_SEMI_MINOR_AXIS} REAL,
-                    {envs.O_PERIOD} REAL,
-                    {envs.O_CIRCUMFERENCE} REAL,
-                    {envs.O_PERIHELION_D} REAL,
-                    {envs.O_PERIHELION_V} REAL,
-                    {envs.O_APHELION_D} REAL,
-                    {envs.O_APHELION_V} REAL  
+                    [{envs.E_NAME}] TEXT,
+                    [{envs.E_TYPE}] TEXT,
+                    [{envs.E_PARENT}] TEXT,
+                    [{envs.E_MASS}] REAL,
+                    [{envs.E_PERIOD}] REAL,
+                    [{envs.E_INCLINATION}] REAL,
+                    [{envs.O_SEMI_MAJOR_AXIS}] REAL,
+                    [{envs.O_INCLINATION}] REAL,
+                    [{envs.O_ECCENTRICITY}] REAL,
+                    [{envs.O_ASCENDING_NODE}] REAL,
+                    [{envs.O_ARG_PERIAPSIS}] REAL,
+                    [{envs.O_PERIHELION_DAY}] TEXT,
+                    [{envs.O_SEMI_MINOR_AXIS}] REAL,
+                    [{envs.O_PERIOD}] REAL,
+                    [{envs.O_CIRCUMFERENCE}] REAL,
+                    [{envs.O_PERIHELION_D}] REAL,
+                    [{envs.O_PERIHELION_V}] REAL,
+                    [{envs.O_APHELION_D}] REAL,
+                    [{envs.O_APHELION_V}] REAL  
                 )
                 """)
 
@@ -53,25 +53,25 @@ class Database():
         self._cursor.execute(f"""
                 INSERT INTO {self._name}
                 (
-                    {envs.E_NAME},
-                    {envs.E_TYPE},
-                    {envs.E_PARENT},
-                    {envs.E_MASS},
-                    {envs.E_PERIOD},
-                    {envs.E_INCLINATION},
-                    {envs.O_SEMI_MAJOR_AXIS},
-                    {envs.O_INCLINATION},
-                    {envs.O_ECCENTRICITY},
-                    {envs.O_ASCENDING_NODE},
-                    {envs.O_ARG_PERIAPSIS},
-                    {envs.O_PERIHELION_DAY},
-                    {envs.O_SEMI_MINOR_AXIS},
-                    {envs.O_PERIOD},
-                    {envs.O_CIRCUMFERENCE},
-                    {envs.O_PERIHELION_D},
-                    {envs.O_PERIHELION_V},
-                    {envs.O_APHELION_D},
-                    {envs.O_APHELION_V}
+                    [{envs.E_NAME}],
+                    [{envs.E_TYPE}],
+                    [{envs.E_PARENT}],
+                    [{envs.E_MASS}],
+                    [{envs.E_PERIOD}],
+                    [{envs.E_INCLINATION}],
+                    [{envs.O_SEMI_MAJOR_AXIS}],
+                    [{envs.O_INCLINATION}],
+                    [{envs.O_ECCENTRICITY}],
+                    [{envs.O_ASCENDING_NODE}],
+                    [{envs.O_ARG_PERIAPSIS}],
+                    [{envs.O_PERIHELION_DAY}],
+                    [{envs.O_SEMI_MINOR_AXIS}],
+                    [{envs.O_PERIOD}],
+                    [{envs.O_CIRCUMFERENCE}],
+                    [{envs.O_PERIHELION_D}],
+                    [{envs.O_PERIHELION_V}],
+                    [{envs.O_APHELION_D}],
+                    [{envs.O_APHELION_V}]
                 )
 
                 VALUES
@@ -105,11 +105,11 @@ class Database():
         return self._cursor.fetchall()
     
     def find_object(self, name:str):
-        self._cursor.execute(f"SELECT * FROM {self._name} WHERE {envs.E_NAME} = '{name}'")
+        self._cursor.execute(f"SELECT * FROM {self._name} WHERE [{envs.E_NAME}] = '{name}'")
         return self._cursor.fetchall()
     
     def delete_object(self, name:str):
-        sql = f"DELETE FROM {self._name} WHERE {envs.E_NAME} = '{name}'"
+        sql = f"DELETE FROM {self._name} WHERE [{envs.E_NAME}] = '{name}'"
         self._cursor.execute(sql)
         self._db.commit()
 

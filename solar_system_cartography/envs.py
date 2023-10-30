@@ -1,7 +1,3 @@
-import os
-from solar_system_cartography import utils
-
-# PRESETS = utils.read_json(os.path.join(os.path.dirname(__file__), "presets.json"))
 AU = 149597870700 # meters
 
 G = 6.67430e-11 # Newton's gravitational constant
@@ -9,27 +5,27 @@ G = 6.67430e-11 # Newton's gravitational constant
 SOLAR_MASS = 1.989e30 # Solar mass in kilograms
 
 # Main names
-E_NAME = "name"
-E_TYPE = "type"
-E_PARENT = "parent"
-E_MASS = "mass"
-E_PERIOD = "rotation_period"
-E_INCLINATION = "axis_inclination"
-O_SEMI_MAJOR_AXIS = "semi_major_axis"
-O_INCLINATION = "inclination"
-O_ECCENTRICITY = "eccentricity"
-O_ASCENDING_NODE = "ascending_node"
-O_ARG_PERIAPSIS = "arg_periapsis"
-O_PERIHELION_DAY = "perihelion_day"
+E_NAME = "Name"
+E_TYPE = "Type"
+E_PARENT = "Parent"
+E_MASS = "Mass (kg)"
+E_PERIOD = "Rotation Period (d)"
+E_INCLINATION = "Axis Inclination (°)"
+O_SEMI_MAJOR_AXIS = "Semi Major Axis (AU)"
+O_INCLINATION = "Inclination (°)"
+O_ECCENTRICITY = "Eccentricity"
+O_ASCENDING_NODE = "Ascending Node (°)"
+O_ARG_PERIAPSIS = "Periapsis Argument (°)"
+O_PERIHELION_DAY = "Perihelion or Perigee Date"
 
 # Additional names
-O_SEMI_MINOR_AXIS = "semi_minor_axis"
-O_PERIOD = "period"
-O_CIRCUMFERENCE = "circumference"
-O_PERIHELION_D = "distance_at_perihelion"
-O_PERIHELION_V = "velocity_at_perihelion"
-O_APHELION_D = "distance_at_aphelion"
-O_APHELION_V = "velocity_at_aphelion"
+O_SEMI_MINOR_AXIS = "Semi Minor Axis (AU)"
+O_PERIOD = "Orbital Period (d)"
+O_CIRCUMFERENCE = "Circumference (m)"
+O_PERIHELION_D = "Perihelion Distance (AU)"
+O_PERIHELION_V = "Perihelion Speed (m/s)"
+O_APHELION_D = "Aphelion Distance (AU)"
+O_APHELION_V = "Aphelion Speed (m/s)"
 
 # Types
 T_PLANET = "Planet"

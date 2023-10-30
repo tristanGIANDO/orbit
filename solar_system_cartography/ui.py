@@ -12,27 +12,25 @@ try:
 except:
     STANDALONE = True
 
-
-
-HEADERS = ["Name",
-           "Type",
-           "Parent",
-           "Mass (kg)",
-           "Rotation Period (d)",
-           "Axis Inclination (°)",
-           "Semi Major Axis (AU)",
-           "Inclination (°)",
-           "Eccentricity",
-           "Ascending Node (°)",
-           "Periapsis Argument (°)",
-           "Perihelion Date",
-           "Semi Minor Axis (AU)",  
-           "Orbital Period (d)",
-           "Circumference (m)",
-           "Perihelion Distance (AU)",
-           "Perihelion Speed (m/s)",
-           "Aphelion Distance (AU)",
-           "Aphelion Speed (m/s)"]
+HEADERS = [envs.E_NAME,
+           envs.E_TYPE,
+           envs.E_PARENT,
+           envs.E_MASS,
+           envs.E_PERIOD,
+           envs.E_INCLINATION,
+           envs.O_SEMI_MAJOR_AXIS,
+           envs.O_INCLINATION,
+           envs.O_ECCENTRICITY,
+           envs.O_ASCENDING_NODE,
+           envs.O_ARG_PERIAPSIS,
+           envs.O_PERIHELION_DAY,
+           envs.O_SEMI_MINOR_AXIS,  
+           envs.O_PERIOD,
+           envs.O_CIRCUMFERENCE,
+           envs.O_PERIHELION_D,
+           envs.O_PERIHELION_V,
+           envs.O_APHELION_D,
+           envs.O_APHELION_V]
 
 class CustomTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, data:dict):
@@ -71,6 +69,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.root_project_line_edit = QtWidgets.QLineEdit()
         self.root_project_line_edit.addAction(ICONS.get("folder"), QtWidgets.QLineEdit.LeadingPosition)
         self.root_project_line_edit.setPlaceholderText("Project Directory")
+        self.root_project_line_edit.setDisabled(True)
         self.set_project_button = QtWidgets.QPushButton("Set Project")
         root_layout.addWidget(self.root_project_line_edit)
         root_layout.addWidget(self.set_project_button)
@@ -81,10 +80,12 @@ class MainUI(QtWidgets.QMainWindow):
         self.objects_vis_tab()
         self.objects_settings_tab()
 
-        self.tab_widget.addTab(self.creation_tab, ICONS.get("create"), "CREATE")
-        self.tab_widget.addTab(self.select_tab, ICONS.get("select"), "SELECT")
-        self.tab_widget.addTab(self.settings_tab, ICONS.get("settings"), "SETTINGS")
+        self.tab_create_idx = self.tab_widget.addTab(self.creation_tab, ICONS.get("create"), "CREATE")
+        self.tab_db_idx = self.tab_widget.addTab(self.select_tab, ICONS.get("select"), "DATABASE")
+        self.tab_settings_idx = self.tab_widget.addTab(self.settings_tab, ICONS.get("settings"), "SETTINGS")
         self._layout.addWidget(self.tab_widget)
+
+        self._layout.addWidget(QtWidgets.QLabel("By Tristan Giandoriggio"))
 
         self.create_connections()
 
@@ -225,6 +226,19 @@ class MainUI(QtWidgets.QMainWindow):
     def create_connections(self) ->None:
         self.set_project_button.clicked.connect(self.on_set_project_clicked)
         self.create_button.clicked.connect(self.on_create_button_clicked)
+        self.glob_data[envs.E_TYPE].currentTextChanged.connect(self.on_type_changed)
+
+    def on_type_changed(self) ->None:
+        if self.glob_data[envs.E_TYPE].currentText() == envs.T_STAR:
+            for wdg in list(self.orb_data.values()):
+                wdg.setEnabled(False)
+                self.obj_data[envs.E_PERIOD].setEnabled(False)
+                self.obj_data[envs.E_INCLINATION].setEnabled(False)
+        else:
+            for wdg in list(self.orb_data.values()):
+                wdg.setEnabled(True)
+                self.obj_data[envs.E_PERIOD].setEnabled(True)
+                self.obj_data[envs.E_INCLINATION].setEnabled(True)
 
     def read(self) ->dict:
         date = self.orb_data.get(envs.O_PERIHELION_DAY).date().toString("yyyy.MM.dd").split(".")
@@ -333,9 +347,15 @@ class MainUI(QtWidgets.QMainWindow):
 
     def on_set_project_clicked(self) ->None:
         self.init_project()
+        self.tab_widget.setCurrentIndex(self.tab_db_idx)
 
     def on_create_button_clicked(self) ->None:
         self._builder.element(self.read())
+        message_box = QtWidgets.QMessageBox.information(
+                    self,
+                    "Success", 
+                    f"Object created with success !",
+                    QtWidgets.QMessageBox.Ok)
         self.reload()
 
 class Icons():
