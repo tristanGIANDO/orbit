@@ -15,6 +15,20 @@ PRESETS = [
         [2000,11,24]
     ),
     (
+        "Venus",
+        envs.T_PLANET,
+        envs.ORIGIN,
+        4.8675e24,
+        -243.023,
+        177.36,
+        0.723336,
+        3.39471,
+        0.00678,
+        76.68,
+        54.9,
+        [2023,4,17]
+    ),
+    (
         "Earth",
         envs.T_PLANET,
         envs.ORIGIN,
@@ -41,97 +55,117 @@ PRESETS = [
         291.682547,
         0, # wrong
         [2023,10,26]
+    ),
+    (
+        "Mars",
+        envs.T_PLANET,
+        envs.ORIGIN,
+        6.4185e23,
+        1.025957,
+        25.19,
+        1.52368055,
+        1.85,
+        0.09339,
+        49.57854,
+        286.5,
+        [2022,6,21]
+    ),
+    (
+        "Jupiter",
+        envs.T_PLANET,
+        envs.ORIGIN,
+        1.8986e27,
+        0.41351,
+        3.12,
+        5.20289,
+        1.304,
+        0.04839,
+        100.5,
+        274.255,
+        [2023,11,1]
+    ),
+    (
+        "Saturn",
+        envs.T_PLANET,
+        envs.ORIGIN,
+        5.6846e26,
+        0.4,
+        26.73,
+        9.5367,
+        2.486,
+        0.0539,
+        113.7,
+        338.94,
+        [2003,6,20]
+    ),
+    (
+        "Uranus",
+        envs.T_PLANET,
+        envs.ORIGIN,
+        8.6811e25,
+        -0.718,
+        97.77,
+        19.19126393,
+        0.76986,
+        0.04716771,
+        74.22988,
+        96.9,
+        [2050,8,4]
+    ),
+    (
+        "Neptune",
+        envs.T_PLANET,
+        envs.ORIGIN,
+        102.409e24,
+        0.67125,
+        28.32,
+        30.06896348,
+        1.76917,
+        0.00858587,
+        131.72169,
+        273.2,
+        [1881,2,2]
+    ),
+    (
+        "Pluto",
+        envs.T_PLANET_DWARF,
+        envs.ORIGIN,
+        1.314e22,
+        -6.387,
+        122.52,
+        39.4450697,
+        17.0890009,
+        0.25024871,
+        110.376956,
+        112.5971417,
+        [1989,5,8]
+    ),
+    (
+        "1P/Halley",
+        envs.T_COMET,
+        envs.ORIGIN,
+        2.2e14,
+        1,
+        0,
+        17.872265,
+        162.2239,
+        0.966321,
+        58.9763,
+        111.9047,
+        [1986,2,9]
+    ),
+    (
+        "ISS",
+        envs.T_ART_SAT,
+        "Earth",
+        450000,
+        0,
+        0,
+        0.00004499395591998891,
+        51.65,
+        0.0000580,
+        19.7392,
+        58.2980,
+        [2022,12,21]
     )
 ]
-
-OLD_PRESETS = {
-    "Venus" : {
-        "semi_major_axis" : 0.723336,
-        "inclination" : 3.39471,
-        "eccentricity" : 0.00678,
-        "mass" : 4.8675e24,
-        "rotation_period" : -243.023,
-        "axis_inclination" : 177.36,
-        "ascending_node" :76.68,
-        "arg_periapsis" : 54.9,
-        "random_perihelion_day" : [2023,4,17]
-    },
-    "Mars" : {
-        "semi_major_axis" : 1.52368055,
-        "inclination" : 1.85,
-        "eccentricity" : 0.09339,
-        "mass" : 6.4185e23,
-        "rotation_period" : 1.025957,
-        "axis_inclination" : 25.19,
-        "ascending_node" : 49.57854,
-        "arg_periapsis" : 286.5,
-        "random_perihelion_day" : [2022,6,21]
-    },
-    "Jupiter" : {
-        "semi_major_axis" : 5.20289,
-        "inclination" : 1.304,
-        "eccentricity" : 0.04839,
-        "mass" : 1.8986e27,
-        "rotation_period" : 0.41351,
-        "axis_inclination" : 3.12,
-        "radius" : 69911000,
-        "ascending_node" : 100.5,
-        "arg_periapsis" : 274.255,
-        "random_perihelion_day" : [2023,11,1]
-    },
-    "Saturn" : {
-        "semi_major_axis" : 9.5367,
-        "inclination" : 2.486,
-        "eccentricity" : 0.0539,
-        "mass" : 5.6846e26,
-        "rotation_period" : 0.4,
-        "axis_inclination" : 26.73,
-        "ascending_node" : 113.7,
-        "arg_periapsis" : 338.94,
-        "random_perihelion_day" : [2003,6,20]
-    },
-    "Uranus" : {
-        "semi_major_axis" : 19.19126393,
-        "inclination" : 0.76986,
-        "eccentricity" : 0.04716771,
-        "mass" : 8.6811e25,
-        "rotation_period" : -0.718,
-        "axis_inclination" : 97.77,
-        "ascending_node" : 74.22988,
-        "arg_periapsis" : 96.9,
-        "random_perihelion_day" : [2050,8,4]
-    },
-    "Neptune" : {
-        "semi_major_axis" : 30.06896348,
-        "inclination" : 1.76917,
-        "eccentricity" : 0.00858587,
-        "rotation_period" : 0.67125,
-        "mass" : 102.409e24,
-        "axis_inclination": 28.32,
-        "ascending_node" : 131.72169,
-        "arg_periapsis" : 273.2,
-        "random_perihelion_day" : [1881,2,2]
-    },
-    "Pluto" : {
-        "semi_major_axis" : 39.4450697,
-        "inclination" : 17.0890009,
-        "eccentricity" : 0.25024871,
-        "rotation_period" :-6.387,
-        "mass":1.314e22,
-        "axis_inclination": 122.52,
-        "ascending_node" : 110.376956,
-        "arg_periapsis" : 112.5971417,
-        "random_perihelion_day" : [1989,5,8]
-    },
-    "1P/Halley" : {
-        "semi_major_axis" : 17.872265,
-        "inclination" : 162.2239,
-        "eccentricity" : 0.966321,
-        "mass" : 2.2e14,
-        "rotation_period" : 1,
-        "axis_inclination" : 0,
-        "random_perihelion_day" : [1986,2,9],
-        "ascending_node" : 58.9763,
-        "arg_periapsis" : 111.9047
-    }
-}

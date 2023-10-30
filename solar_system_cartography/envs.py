@@ -29,6 +29,7 @@ O_APHELION_V = "Aphelion Speed (m/s)"
 
 # Types
 T_PLANET = "Planet"
+T_PLANET_DWARF = "Dwarf Planet"
 T_STAR = "Star"
 T_COMET = "Comet"
 T_NAT_SAT = "Natural Satellite"
@@ -38,6 +39,7 @@ T_RANDOM = "Random"
 
 TYPES = [
     T_PLANET,
+    T_PLANET_DWARF,
     T_STAR,
     T_COMET,
     T_NAT_SAT,
@@ -49,6 +51,7 @@ TYPES = [
 # Types colors
 COLORS = {
     T_PLANET : [255,255,255],
+    T_PLANET_DWARF : [25,58,98],
     T_STAR : [0,0,0],
     T_COMET : [0,0,255],
     T_NAT_SAT : [255,0,0],

@@ -81,7 +81,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.objects_settings_tab()
 
         self.tab_create_idx = self.tab_widget.addTab(self.creation_tab, ICONS.get("create"), "CREATE")
-        self.tab_db_idx = self.tab_widget.addTab(self.select_tab, ICONS.get("select"), "DATABASE")
+        self.tab_db_idx = self.tab_widget.addTab(self.select_tab, ICONS.get("database"), "DATABASE")
         self.tab_settings_idx = self.tab_widget.addTab(self.settings_tab, ICONS.get("settings"), "SETTINGS")
         self._layout.addWidget(self.tab_widget)
 
@@ -369,7 +369,7 @@ class Icons():
             "global" : "global.png",
             "orbital" : "orbital.png",
             "physical" : "physical.png",
-            "select" : "select.jpg",
+            "database" : "database.svg",
             "settings" : "settings.png"
         }
 
