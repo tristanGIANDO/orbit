@@ -260,10 +260,10 @@ class Rig():
 
         if parent == envs.ORIGIN:
             self._barycenter = self.cr_barycenter()
-            self.cstr_obj_to_parent(self._orbit, self._barycenter)
+            self.cstr_obj_to_parent(self._offset, self._barycenter)
         else:
             parent = f"{parent}_follow"
-            self.cstr_obj_to_parent(self._orbit, parent)
+            self.cstr_obj_to_parent(self._offset, parent)
     
     def build_star(self) ->None:
         self.delete()

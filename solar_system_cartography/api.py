@@ -162,7 +162,7 @@ class ObjectInOrbit():
         return self._orbital_period
     
     def get_random_perihelion_day(self) ->list:
-        return self._perihelion_day
+        return eval(self._perihelion_day)
     
     def get_arg_periapsis(self) ->float:
         return self._arg_periapsis
@@ -248,9 +248,10 @@ class ObjectInOrbit():
         """Returns the number of days from J2000 to the specified perihelion date.
         """
         perihelion_day = self.get_random_perihelion_day()
-        return utils.days_from_j2000(perihelion_day[0],
-                                    perihelion_day[1],
-                                    perihelion_day[2])
+        print(perihelion_day)
+        return int(utils.days_from_j2000(int(perihelion_day[0]),
+                                    int(perihelion_day[1]),
+                                    int(perihelion_day[2])))
         
     def get_covered_distance_each_day(self) ->dict:
         def find_root(x, e, M):
@@ -261,7 +262,7 @@ class ObjectInOrbit():
         T_rev = self._orbital_period / 365 #orbital period (year)
         e = self._eccentricity
         a = self._semi_major_axis
-        N = 80 # nb of keyposes
+        N = 50 # nb of keyposes
 
         # calculate the date at each N
         times_inc = []
@@ -351,8 +352,9 @@ class ObjectInOrbit():
             values.append(total)
 
         data = {}
+        days = self.get_days()
         for time, value in zip(times_inc,values):
-            data[time*365] = value
+            data[days + time*365] = value
         
         return data
     
