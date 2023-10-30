@@ -51,13 +51,13 @@ TYPES = [
 # Types colors
 COLORS = {
     T_PLANET : [255,255,255],
-    T_PLANET_DWARF : [25,58,98],
-    T_STAR : [0,0,0],
-    T_COMET : [0,0,255],
-    T_NAT_SAT : [255,0,0],
-    T_ART_SAT : [0,255,0],
-    T_ASTEROID : [80,20,255],
-    T_RANDOM : [50,50,50]
+    T_PLANET_DWARF : [255,0,0],
+    T_STAR : [255,255,0],
+    T_COMET : [128,255,0],
+    T_NAT_SAT : [0,255,255],
+    T_ART_SAT : [128,128,128],
+    T_ASTEROID : [0,128,255],
+    T_RANDOM : [255,0,255]
 }
 
 # Parents

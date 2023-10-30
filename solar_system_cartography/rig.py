@@ -6,7 +6,7 @@ from solar_system_cartography import envs
 class File():
     def __init__(self) -> None:
         pass
-    
+
     def new_file(self) ->None:
         cmds.file(new=True, force=True) 
 
@@ -196,6 +196,7 @@ class Rig():
     def cstr_obj_to_parent(self, obj:str, parent:str) ->None:
         # cmds.connectAttr(f"{parent}.worldMatrix[0]", f"{obj}.offsetParentMatrix", f=True)
         cmds.parentConstraint(parent, obj, mo=False)
+        cmds.scaleConstraint(parent, obj, mo=False)
 
     def get_distances(orbit:str) ->dict:
         barycenter_pos = [0.0, 0.0, 0.0]
