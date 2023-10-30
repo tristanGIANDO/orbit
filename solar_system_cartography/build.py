@@ -42,7 +42,6 @@ class Build():
             parent = self._db.find_object(elem[2])
             if parent:
                 parent_mass = parent[0][3]
-                print(parent[0][3])
             else:
                 parent_mass = envs.SOLAR_MASS
             
@@ -76,9 +75,12 @@ class Build():
 
     def new_file(self) ->None:
         self._file.new_file()
-        
+
     def read(self) ->list:
         return self._db.read()
+    
+    def delete_item(self, name:str) ->None:
+        self._db.delete_object(name)
     
 if __name__ == "__main__":
     b = Build(r"C:\Users\giand\Videos\demo")

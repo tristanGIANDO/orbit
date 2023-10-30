@@ -178,8 +178,6 @@ class ObjectInOrbit():
         complete revolution around the Sun from its distance from the Sun.
         """
         # Using Kepler's law to calculate the orbital period (T)
-        print("major axis", self._semi_major_axis)
-        print("parent mass", self._parent_mass)
         orbital_period = 2 * math.pi * math.sqrt((utils.convert_au_to_meters(self._semi_major_axis)**3) / (envs.G * self._parent_mass))
         
         # Conversion to days
@@ -250,7 +248,6 @@ class ObjectInOrbit():
         """Returns the number of days from J2000 to the specified perihelion date.
         """
         perihelion_day = self.get_random_perihelion_day()
-        print(perihelion_day)
         return int(utils.days_from_j2000(int(perihelion_day[0]),
                                     int(perihelion_day[1]),
                                     int(perihelion_day[2])))

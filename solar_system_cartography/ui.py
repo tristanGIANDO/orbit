@@ -39,6 +39,7 @@ class CustomTreeItem(QtWidgets.QTreeWidgetItem):
             return
         self._data = data
         if data:
+            self._name = data[0]
             for i in range(19):
                 self.setText(i, str(data[i]))
 
@@ -77,11 +78,11 @@ class MainUI(QtWidgets.QMainWindow):
 
         self.tab_widget = QtWidgets.QTabWidget()
         self.objects_creation_tab()
-        self.objects_vis_tab()
+        self.database_tab()
         self.objects_settings_tab()
 
         self.tab_create_idx = self.tab_widget.addTab(self.creation_tab, ICONS.get("create"), "CREATE")
-        self.tab_db_idx = self.tab_widget.addTab(self.select_tab, ICONS.get("database"), "DATABASE")
+        self.tab_db_idx = self.tab_widget.addTab(self.db_tab, ICONS.get("database"), "DATABASE")
         self.tab_settings_idx = self.tab_widget.addTab(self.settings_tab, ICONS.get("settings"), "SETTINGS")
         self._layout.addWidget(self.tab_widget)
 
@@ -157,8 +158,9 @@ class MainUI(QtWidgets.QMainWindow):
         self.creation_tab.layout().addWidget(self.create_button)
         self.creation_tab.layout().addStretch(1)
 
-    def objects_vis_tab(self) ->None:
-        self.select_tab = QtWidgets.QWidget()
+    def database_tab(self) ->None:
+        self.db_tab = QtWidgets.QWidget()
+        # tree
         self.tree = QtWidgets.QTreeWidget() 
         self.tree.setColumnCount(len(HEADERS))
         self.tree.setHeaderLabels(HEADERS)
@@ -166,11 +168,14 @@ class MainUI(QtWidgets.QMainWindow):
             self.tree.header().setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeToContents)
         self.tree.setRootIsDecorated(False)
         self.tree.setSortingEnabled(True)
+        self.tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self._show_context_menu)
         self.tree.header().sectionsMovable()
         
         select_tab_layout = QtWidgets.QVBoxLayout()
         select_tab_layout.addWidget(self.tree)
-        self.select_tab.setLayout(select_tab_layout)
+
+        self.db_tab.setLayout(select_tab_layout)
 
     def objects_settings_tab(self) ->None:
         self.settings_tab = QtWidgets.QWidget()
@@ -227,6 +232,43 @@ class MainUI(QtWidgets.QMainWindow):
         self.set_project_button.clicked.connect(self.on_set_project_clicked)
         self.create_button.clicked.connect(self.on_create_button_clicked)
         self.glob_data[envs.E_TYPE].currentTextChanged.connect(self.on_type_changed)
+
+    def _show_context_menu(self, position):
+        delete_action = QtWidgets.QAction("Delete")
+        delete_action.triggered.connect(self.on_delete_triggered)
+        modify_action = QtWidgets.QAction("Modify")
+        modify_action.triggered.connect(self.on_modified_triggered)
+        menu = QtWidgets.QMenu(self)
+        menu.addAction(delete_action)
+        menu.addAction(modify_action)
+        menu.exec_(self.mapToGlobal(position))
+
+    def on_delete_triggered(self) ->None:
+        name = self.tree.currentItem()._name
+        self._builder.delete_item(name)
+        self.reload()
+
+    def on_modified_triggered(self) ->None:
+        data = self.tree.currentItem()._data
+        # set to creation tab
+        self.tab_widget.setCurrentIndex(self.tab_db_idx)
+
+        # fill fields
+        self.glob_data[envs.E_NAME].setText(data[0])
+        self.glob_data[envs.E_TYPE].setItemText(0, data[1])
+        self.glob_data[envs.E_PARENT].setItemText(0, data[2])
+        self.obj_data[envs.E_MASS].setText(str(data[3]))
+        self.obj_data[envs.E_PERIOD].setText(str(data[4]))
+        self.obj_data[envs.E_INCLINATION].setText(str(data[5]))
+        self.orb_data[envs.O_SEMI_MAJOR_AXIS].setText(str(data[6]))
+        self.orb_data[envs.O_INCLINATION].setText(str(data[7]))
+        self.orb_data[envs.O_ECCENTRICITY].setText(str(data[8]))
+        self.orb_data[envs.O_ASCENDING_NODE].setText(str(data[9]))
+        self.orb_data[envs.O_ARG_PERIAPSIS].setText(str(data[10]))
+        q_date = QtCore.QDate(data[11][0],
+                                data[11][1],
+                                data[11][2])
+        self.orb_data[envs.O_PERIHELION_DAY].setDate(q_date)
 
     def on_type_changed(self) ->None:
         if self.glob_data[envs.E_TYPE].currentText() == envs.T_STAR:
