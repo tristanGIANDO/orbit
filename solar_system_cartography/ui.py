@@ -60,9 +60,11 @@ class MainUI(QtWidgets.QMainWindow):
         self._project_path = ""
 
         self.create_menubar()
-
-        title_label = QtWidgets.QLabel(self._title)
-        title_label.setFont(QtGui.QFont("Arial", 18, QtGui.QFont.Bold))
+        # title
+        title_label = QtWidgets.QLabel(self)
+        pixmap = QtGui.QPixmap(r"C:\Users\giand\OneDrive\Documents\packages\solar_system_cartography\dev\solar_system_cartography\icons\tool_dark.png")
+        pixmap = pixmap.scaledToWidth(200, QtCore.Qt.SmoothTransformation)
+        title_label.setPixmap(pixmap)
         title_label.setAlignment(QtCore.Qt.AlignCenter)
         central_widget.layout().addWidget(title_label)
         # root
@@ -251,7 +253,7 @@ class MainUI(QtWidgets.QMainWindow):
     def on_modified_triggered(self) ->None:
         data = self.tree.currentItem()._data
         # set to creation tab
-        self.tab_widget.setCurrentIndex(self.tab_db_idx)
+        self.tab_widget.setCurrentIndex(self.tab_create_idx)
 
         # fill fields
         self.glob_data[envs.E_NAME].setText(data[0])
@@ -265,9 +267,10 @@ class MainUI(QtWidgets.QMainWindow):
         self.orb_data[envs.O_ECCENTRICITY].setText(str(data[8]))
         self.orb_data[envs.O_ASCENDING_NODE].setText(str(data[9]))
         self.orb_data[envs.O_ARG_PERIAPSIS].setText(str(data[10]))
-        q_date = QtCore.QDate(data[11][0],
-                                data[11][1],
-                                data[11][2])
+        date = eval(data[11])
+        q_date = QtCore.QDate(int(date[0]),
+                                int(date[1]),
+                                int(date[2]))
         self.orb_data[envs.O_PERIHELION_DAY].setDate(q_date)
 
     def on_type_changed(self) ->None:

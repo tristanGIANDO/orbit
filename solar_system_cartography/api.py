@@ -266,9 +266,9 @@ class ObjectInOrbit():
         # calculate the date at each N
         times_inc = []
         time_inc = T_rev / N
-        for i in range(N-1):
+        for i in range(N):
             times_inc.append(time_inc*i)
-        times_inc.append(T_rev)
+        # times_inc.append(T_rev)
 
         # Kepler
         # Find where is the object

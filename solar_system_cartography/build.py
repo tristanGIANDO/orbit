@@ -12,6 +12,19 @@ class Build():
         self._db = Database(project_path)
         self._project_path = project_path
 
+        if not STANDALONE:
+            self._file = File()
+
+        self.reload(new_file=True)
+
+    def reload(self, new_file:bool=True) ->None:
+        self.init_elements()
+        if not STANDALONE:
+            if new_file:
+                self.new_file()
+            self.all(rebuild=False)
+
+    def init_elements(self):
         # sort elements (goal is to create parents before children)
         unparented = []
         parented = []
@@ -27,9 +40,6 @@ class Build():
 
         self._elements = unparented + parented + stars
         self._children = unparented + parented
-
-        if not STANDALONE:
-            self._file = File()
 
     def all(self, rebuild:bool=True) ->None:
         for elem in self._elements:
@@ -81,6 +91,7 @@ class Build():
     
     def delete_item(self, name:str) ->None:
         self._db.delete_object(name)
+        self.reload()
     
 if __name__ == "__main__":
     b = Build(r"C:\Users\giand\Videos\demo")
