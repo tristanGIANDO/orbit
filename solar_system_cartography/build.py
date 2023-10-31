@@ -22,7 +22,7 @@ class Build():
         if not STANDALONE:
             if new_file:
                 self.new_file()
-            self.all(rebuild=False)
+            # self.all(rebuild=False)
 
     def init_elements(self):
         # sort elements (goal is to create parents before children)
@@ -88,13 +88,14 @@ class Build():
 
     def close(self) ->None:
         self._db.close()
-        
+
     def read(self) ->list:
         return self._db.read()
     
     def delete_item(self, name:str) ->None:
         self._db.delete_object(name)
         self.reload()
+        self.all(rebuild=False)
     
 if __name__ == "__main__":
     b = Build(r"C:\Users\giand\Videos\demo")

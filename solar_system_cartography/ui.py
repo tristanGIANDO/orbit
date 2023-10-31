@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, webbrowser
 from functools import partial
 from solar_system_cartography.Qt import QtWidgets, QtGui, QtCore
 from solar_system_cartography import envs
@@ -263,6 +263,38 @@ class MainUI(QtWidgets.QMainWindow):
             self.presets_menu.addAction(self.action[name])
             self.action[name].triggered.connect(partial(self.on_preset_triggered, name))
 
+        self.about_menu = self.menu_bar.addMenu("About")
+        self.action["help"] = QtWidgets.QAction("Help (?)", self)
+        self.action["help"].triggered.connect(self.on_help_triggered)
+        self.about_menu.addAction(self.action["help"])
+        self.action["about"] = QtWidgets.QAction("About me", self)
+        self.action["about"].triggered.connect(self.on_about_triggered)
+        self.about_menu.addAction(self.action["about"])
+
+    def on_help_triggered(self) ->None:
+        message_box = QtWidgets.QMessageBox.question(
+                    self,
+                    "Need help ?", 
+                    f"""
+        Some important conventions:\n
+    * The object name should not contain any special characters apart from '/' and spaces should be replaced by '_'.
+    * Decimal numbers are written as 'xxx.x', no ',' is required.
+    * Powers are written as 'xxex'.
+    * The parent 'Origin' means that the object rotates around the barycentre of the system represented.
+
+        Approximations :\n
+    * It is difficult to find all the data, especially that concerning physical characteristics.
+    However, always enter a value in all the boxes, even if it is 0.
+
+    * To change the colours of the types, go to the 'envs.py' file.
+
+    Have fun ! :)
+                    """,
+                    QtWidgets.QMessageBox.Ok)
+
+    def on_about_triggered(self) ->None:
+        webbrowser.open(envs.ME)
+
     def create_connections(self) ->None:
         self.set_project_button.clicked.connect(self.on_set_project_clicked)
         self.create_button.clicked.connect(self.on_create_button_clicked)
@@ -408,7 +440,7 @@ class MainUI(QtWidgets.QMainWindow):
             
             # message box
             if not STANDALONE:
-                message_box = QtWidgets.QMessageBox.information(
+                message_box = QtWidgets.QMessageBox.question(
                     self,
                     "Open existing file ?", 
                     f"Open existing file ?",

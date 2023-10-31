@@ -80,3 +80,5 @@ COLORS = {
 
 # Parents
 ORIGIN = "Origin"
+
+ME = "https://www.linkedin.com/in/tristan-giandoriggio/"
