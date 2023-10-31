@@ -86,6 +86,9 @@ class Build():
     def new_file(self) ->None:
         self._file.new_file()
 
+    def close(self) ->None:
+        self._db.close()
+        
     def read(self) ->list:
         return self._db.read()
     

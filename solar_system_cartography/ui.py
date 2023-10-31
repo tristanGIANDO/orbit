@@ -40,8 +40,26 @@ class CustomTreeItem(QtWidgets.QTreeWidgetItem):
         self._data = data
         if data:
             self._name = data[0]
-            for i in range(19):
+            for i in range(len(HEADERS)):
                 self.setText(i, str(data[i]))
+                # self.setTextAlignment(i, QtCore.Qt.AlignCenter)
+                if i % 2 == 0:
+                    if STANDALONE:
+                        self.setBackground(i, QtGui.QColor(240,240,240))
+                    else:
+                        self.setBackground(i, QtGui.QColor(50,50,50))
+
+            # color type
+            self.setIcon(1, QtGui.QIcon(self.type_color(data[1])))
+
+        self.setSizeHint(2,QtCore.QSize(20,20))
+
+    def type_color(self, typ:str) ->QtGui.QPixmap:
+        ct = envs.COLORS[typ]
+        color = QtGui.QPixmap(20,20)
+        color.fill(QtGui.QColor(*ct))
+
+        return color
 
 class MainUI(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
@@ -51,6 +69,7 @@ class MainUI(QtWidgets.QMainWindow):
         self._version = "dev"
         self._builder = None
         self.setWindowTitle(f"{self._title} v-{self._version}")
+        self.setWindowIcon(ICONS.get("logo"))
         self.setGeometry(100, 100, 600, 400)
         central_widget = QtWidgets.QWidget()
         self.setCentralWidget(central_widget)
@@ -62,7 +81,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.create_menubar()
         # title
         title_label = QtWidgets.QLabel(self)
-        pixmap = QtGui.QPixmap(r"C:\Users\giand\OneDrive\Documents\packages\solar_system_cartography\dev\solar_system_cartography\icons\tool_dark.png")
+        pixmap = QtGui.QPixmap(ICONS.get_title())
         pixmap = pixmap.scaledToWidth(200, QtCore.Qt.SmoothTransformation)
         title_label.setPixmap(pixmap)
         title_label.setAlignment(QtCore.Qt.AlignCenter)
@@ -72,7 +91,7 @@ class MainUI(QtWidgets.QMainWindow):
         self.root_project_line_edit = QtWidgets.QLineEdit()
         self.root_project_line_edit.addAction(ICONS.get("folder"), QtWidgets.QLineEdit.LeadingPosition)
         self.root_project_line_edit.setPlaceholderText("Project Directory")
-        self.root_project_line_edit.setDisabled(True)
+        self.root_project_line_edit.setReadOnly(True)
         self.set_project_button = QtWidgets.QPushButton("Set Project")
         root_layout.addWidget(self.root_project_line_edit)
         root_layout.addWidget(self.set_project_button)
@@ -81,16 +100,21 @@ class MainUI(QtWidgets.QMainWindow):
         self.tab_widget = QtWidgets.QTabWidget()
         self.objects_creation_tab()
         self.database_tab()
-        self.objects_settings_tab()
+        # self.objects_settings_tab()
 
         self.tab_create_idx = self.tab_widget.addTab(self.creation_tab, ICONS.get("create"), "CREATE")
-        self.tab_db_idx = self.tab_widget.addTab(self.db_tab, ICONS.get("database"), "DATABASE")
-        self.tab_settings_idx = self.tab_widget.addTab(self.settings_tab, ICONS.get("settings"), "SETTINGS")
+        self.tab_db_idx = self.tab_widget.addTab(self.db_tab, ICONS.get("physical"), "DATABASE")
+        # self.tab_settings_idx = self.tab_widget.addTab(self.settings_tab, ICONS.get("settings"), "SETTINGS")
         self._layout.addWidget(self.tab_widget)
 
         self._layout.addWidget(QtWidgets.QLabel("By Tristan Giandoriggio"))
 
         self.create_connections()
+
+    def closeEvent(self, event):
+        if self._builder:
+            self._builder.close()
+        event.accept()
 
     def objects_creation_tab(self) ->None:
         self.creation_tab = QtWidgets.QWidget()
@@ -101,7 +125,8 @@ class MainUI(QtWidgets.QMainWindow):
         object_grid_layout = QtWidgets.QGridLayout()
         self.glob_data = {}
         self.glob_data[envs.E_NAME] = QtWidgets.QLineEdit()
-        self.glob_data[envs.E_NAME].setPlaceholderText("Object name")
+        self.glob_data[envs.E_NAME].addAction(ICONS.get("name"), QtWidgets.QLineEdit.LeadingPosition)
+        self.glob_data[envs.E_NAME].setPlaceholderText("Object name ( No special character )")
         self.glob_data[envs.E_TYPE] = QtWidgets.QComboBox()
         self.glob_data[envs.E_TYPE].addItems(envs.TYPES)
         self.glob_data[envs.E_PARENT] = QtWidgets.QComboBox()
@@ -118,11 +143,14 @@ class MainUI(QtWidgets.QMainWindow):
         object_grid_layout = QtWidgets.QGridLayout()
         self.obj_data = {}
         self.obj_data[envs.E_MASS] = QtWidgets.QLineEdit()
-        self.obj_data[envs.E_MASS].setPlaceholderText("Object mass (kg)")
+        self.obj_data[envs.E_MASS].addAction(ICONS.get("mass"), QtWidgets.QLineEdit.LeadingPosition)
+        self.obj_data[envs.E_MASS].setPlaceholderText("Object mass")
         self.obj_data[envs.E_PERIOD] = QtWidgets.QLineEdit()
+        self.obj_data[envs.E_PERIOD].addAction(ICONS.get("period"), QtWidgets.QLineEdit.LeadingPosition)
         self.obj_data[envs.E_PERIOD].setPlaceholderText("Number of earth days to complete a full circle on its axis")
         self.obj_data[envs.E_INCLINATION] = QtWidgets.QLineEdit()
-        self.obj_data[envs.E_INCLINATION].setPlaceholderText("Inclination of the object on its axis (°)")
+        self.obj_data[envs.E_INCLINATION].addAction(ICONS.get("axis"), QtWidgets.QLineEdit.LeadingPosition)
+        self.obj_data[envs.E_INCLINATION].setPlaceholderText("Inclination of the object on its axis")
         i = 1      
         for lbl,box in self.obj_data.items():
             object_grid_layout.addWidget(QtWidgets.QLabel(lbl), i, 0)
@@ -136,15 +164,20 @@ class MainUI(QtWidgets.QMainWindow):
         orbital_grid_layout = QtWidgets.QGridLayout()
         self.orb_data = {}
         self.orb_data[envs.O_SEMI_MAJOR_AXIS] = QtWidgets.QLineEdit()
-        self.orb_data[envs.O_SEMI_MAJOR_AXIS].setPlaceholderText("Semi major axis of the orbit (AU)")
+        self.orb_data[envs.O_SEMI_MAJOR_AXIS].setPlaceholderText("Semi major axis of the orbit")
+        self.orb_data[envs.O_SEMI_MAJOR_AXIS].addAction(ICONS.get("major_axis"), QtWidgets.QLineEdit.LeadingPosition)
         self.orb_data[envs.O_INCLINATION] = QtWidgets.QLineEdit()
-        self.orb_data[envs.O_INCLINATION].setPlaceholderText("Inclination of the orbit (°)")
+        self.orb_data[envs.O_INCLINATION].setPlaceholderText("Inclination of the orbit")
+        self.orb_data[envs.O_INCLINATION].addAction(ICONS.get("inclination"), QtWidgets.QLineEdit.LeadingPosition)
         self.orb_data[envs.O_ECCENTRICITY] = QtWidgets.QLineEdit()
         self.orb_data[envs.O_ECCENTRICITY].setPlaceholderText("Eccentricity of the orbit")
+        self.orb_data[envs.O_ECCENTRICITY].addAction(ICONS.get("eccentricity"), QtWidgets.QLineEdit.LeadingPosition)
         self.orb_data[envs.O_ARG_PERIAPSIS] = QtWidgets.QLineEdit()
-        self.orb_data[envs.O_ARG_PERIAPSIS].setPlaceholderText("Periapsis argument (°)")
+        self.orb_data[envs.O_ARG_PERIAPSIS].setPlaceholderText("Periapsis argument")
+        self.orb_data[envs.O_ARG_PERIAPSIS].addAction(ICONS.get("arg"), QtWidgets.QLineEdit.LeadingPosition)
         self.orb_data[envs.O_ASCENDING_NODE] = QtWidgets.QLineEdit()
-        self.orb_data[envs.O_ASCENDING_NODE].setPlaceholderText("Ascending node (°)")
+        self.orb_data[envs.O_ASCENDING_NODE].setPlaceholderText("Ascending node")
+        self.orb_data[envs.O_ASCENDING_NODE].addAction(ICONS.get("node"), QtWidgets.QLineEdit.LeadingPosition)
         self.orb_data[envs.O_PERIHELION_DAY] = QtWidgets.QDateEdit()
         self.orb_data[envs.O_PERIHELION_DAY].setDisplayFormat("yyyy, MM, dd")
         i = 1      
@@ -415,9 +448,29 @@ class Icons():
             "orbital" : "orbital.png",
             "physical" : "physical.png",
             "database" : "database.svg",
-            "settings" : "settings.png"
+            "settings" : "settings.png",
+            "title_light" : "title_light.png",
+            "title_dark" : "title_dark.png",
+            "inclination" : "inclination.png",
+            "node" : "ascending_node.png",
+            "arg" : "periapsis_arg.png",
+            "major_axis" : "major_axis.png",
+            "eccentricity" : "eccentricity.png",
+            "axis" : "axis.png",
+            "date" : "date.png",
+            "mass" : "mass.png",
+            "name" : "name.png",
+            "period" : "period.png"
         }
 
+    def get_title(self) ->str:
+        if STANDALONE:
+            title = self._icons.get("title_dark")
+        else:
+            title = self._icons.get("title_dark")
+
+        return os.path.join(self._root, title)
+    
     def get(self, key):
         if key in self._cache:
             return self._cache[key]
