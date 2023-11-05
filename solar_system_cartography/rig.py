@@ -1,6 +1,6 @@
 from maya import cmds
 import math
-from solar_system_cartography.api import ObjectInOrbit
+from solar_system_cartography.backend import ObjectInOrbit
 from solar_system_cartography import envs
 
 class File():

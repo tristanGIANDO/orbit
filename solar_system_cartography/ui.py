@@ -3,7 +3,7 @@ from functools import partial
 from solar_system_cartography.Qt import QtWidgets, QtGui, QtCore
 from solar_system_cartography import envs
 from solar_system_cartography.presets import PRESETS
-from solar_system_cartography.build import Build
+from solar_system_cartography.api import Api
 
 try:
     from maya import OpenMayaUI as omui
@@ -312,7 +312,7 @@ class MainUI(QtWidgets.QMainWindow):
 
     def on_delete_triggered(self) ->None:
         name = self.tree.currentItem()._name
-        self._builder.delete_item(name)
+        self._builder.delete_element(name)
         self.reload()
 
     def on_modified_triggered(self) ->None:
@@ -435,7 +435,7 @@ class MainUI(QtWidgets.QMainWindow):
             self.root_project_line_edit.setText(self._project_path)
 
             # init database
-            self._builder = Build(self._project_path)
+            self._builder = Api(self._project_path)
             self.reload()
             
             # message box
@@ -448,19 +448,19 @@ class MainUI(QtWidgets.QMainWindow):
                     QtWidgets.QMessageBox.No)
                 if message_box == QtWidgets.QMessageBox.No:
                     # build all in new scene
-                    self._builder.all()
+                    self._builder.build_all()
                 else:
                     # only open existing scene
                     file = self.show_file_dialog(self._project_path)
                     self._builder.open_file(file)
-                    self._builder.all(rebuild=False)
+                    self._builder.build_all(rebuild=False)
 
     def on_set_project_clicked(self) ->None:
         self.init_project()
         self.tab_widget.setCurrentIndex(self.tab_db_idx)
 
     def on_create_button_clicked(self) ->None:
-        self._builder.element(self.read())
+        self._builder.add_element(self.read())
         message_box = QtWidgets.QMessageBox.information(
                     self,
                     "Success", 

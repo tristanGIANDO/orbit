@@ -1,6 +1,6 @@
 from solar_system_cartography import envs
 PRESETS = [
-    (
+    [
         "Mercury",
         envs.T_PLANET,
         envs.ORIGIN,
@@ -13,8 +13,8 @@ PRESETS = [
         48.33,
         29.12,
         [2000,11,24]
-    ),
-    (
+    ],
+    [
         "Venus",
         envs.T_PLANET,
         envs.ORIGIN,
@@ -27,8 +27,8 @@ PRESETS = [
         76.68,
         54.9,
         [2023,4,17]
-    ),
-    (
+    ],
+    [
         "Earth",
         envs.T_PLANET,
         envs.ORIGIN,
@@ -41,8 +41,8 @@ PRESETS = [
         174.873,
         288.064,
         [2023,1,4]
-    ),
-    (
+    ],
+    [
         "Moon",
         envs.T_NAT_SAT,
         "Earth",
@@ -55,8 +55,8 @@ PRESETS = [
         291.682547,
         0, # wrong
         [2023,10,26]
-    ),
-    (
+    ],
+    [
         "Mars",
         envs.T_PLANET,
         envs.ORIGIN,
@@ -69,8 +69,8 @@ PRESETS = [
         49.57854,
         286.5,
         [2022,6,21]
-    ),
-    (
+    ],
+    [
         "Jupiter",
         envs.T_PLANET,
         envs.ORIGIN,
@@ -83,8 +83,8 @@ PRESETS = [
         100.5,
         274.255,
         [2023,11,1]
-    ),
-    (
+    ],
+    [
         "Saturn",
         envs.T_PLANET,
         envs.ORIGIN,
@@ -97,8 +97,8 @@ PRESETS = [
         113.7,
         338.94,
         [2003,6,20]
-    ),
-    (
+    ],
+    [
         "Uranus",
         envs.T_PLANET,
         envs.ORIGIN,
@@ -111,8 +111,8 @@ PRESETS = [
         74.22988,
         96.9,
         [2050,8,4]
-    ),
-    (
+    ],
+    [
         "Neptune",
         envs.T_PLANET,
         envs.ORIGIN,
@@ -125,8 +125,8 @@ PRESETS = [
         131.72169,
         273.2,
         [1881,2,2]
-    ),
-    (
+    ],
+    [
         "Pluto",
         envs.T_PLANET_DWARF,
         envs.ORIGIN,
@@ -139,8 +139,8 @@ PRESETS = [
         110.376956,
         112.5971417,
         [1989,5,8]
-    ),
-    (
+    ],
+    [
         "1P/Halley",
         envs.T_COMET,
         envs.ORIGIN,
@@ -153,8 +153,8 @@ PRESETS = [
         58.9763,
         111.9047,
         [1986,2,9]
-    ),
-    (
+    ],
+    [
         "ISS",
         envs.T_ART_SAT,
         "Earth",
@@ -167,8 +167,8 @@ PRESETS = [
         19.7392,
         58.2980,
         [2022,12,21]
-    ),
-    (
+    ],
+    [
         "Junon",
         envs.T_ASTEROID,
         envs.ORIGIN,
@@ -181,5 +181,5 @@ PRESETS = [
         170.047,
         247.917,
         [2000,1,1]
-    )
+    ]
 ]

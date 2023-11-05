@@ -1,11 +1,9 @@
-from solar_system_cartography.api import ObjectInOrbit
-from solar_system_cartography import rig
-from solar_system_cartography.envs import PRESETS
+from solar_system_cartography.backend import ObjectInOrbit
+from solar_system_cartography.envs import SOLAR_MASS
+from solar_system_cartography.presets import PRESETS
 
-object_name = "Mercury"
-    
-d = PRESETS.get(object_name)
-obj = ObjectInOrbit(object_name, d["mass"], d["semi_major_axis"], d["inclination"], d["eccentricity"], d["day"], d["axis_inclination"])
+mercury = PRESETS[0]
+
+obj = ObjectInOrbit(*mercury, SOLAR_MASS)
+
 print(obj)
-
-rig.build(obj)
