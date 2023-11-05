@@ -28,12 +28,45 @@
 </h3>
 
 ### A brief introduction
-I developed this tool for learning purposes and with the aim of getting closer to the field of **astronomy**, trying to link **science and 3D**.
+>I developed this tool for learning purposes and with the aim of getting closer to the field of **astronomy**, trying to link **science and 3D**.
+>The results obtained are correct but not as accurate as possible because I don't yet have the necessary knowledge. What's more, I haven't used any external libraries that automate everything. Everything is done using the **math** library.
+>The reason the package is open-source is so that I can exchange ideas and learn from others, and I'd be delighted to do that!
 
-The results obtained are correct but not as accurate as possible because I don't yet have the necessary knowledge. What's more, I haven't used any external libraries that automate everything. Everything is done using the **math** library.
+# ABOUT
 
-The reason the package is open-source is so that I can exchange ideas and learn from others, and I'd be delighted to do that!
+**Orbit** is an application that creates a 3D representation of objects in orbit.
+From some data, **Orbit** calculates additional data to refine the representation or help the research.
 
+To create an object in orbit, you will need :
+
+|*Physical characteristics* |Unit|Info|
+|-|:-:|-|
+|**Name**|str|For ease, avoid starting with a number, or add `_` in front of|
+|**Mass**|kg| Needed to calculate rotation speed|
+|**Inclination**|°| Difficult to find, especially for asteroids. It is not an essential element. Value can be 0|
+
+|*Orbital characteristics*|Unit|Info|
+|-|:-:|-|
+|**Semi major axis**|AU||
+|**Eccentricity**|||
+|**Inclination**|°||
+|**Longitude of the ascending node**|°||
+|**Argument of periapsis**|°||
+|**Random day of perihelion**|yyyy,MM,dd|By default, it is J2000|
+
+
+From the data, **Orbit** calculates additional data to refine the creation of orbits.
+|*Result*|Unit|Math|
+|-|:-:|-|
+|Semi minor axis|AU|$a\sqrt{1-{e}^2}$|
+|Orbital period|days|$2&#960\sqrt{{a}^3/MG}$|
+|Circumference|m|$2&#960(aAU)$|
+|Distance at perihelion|AU|$a(1-e)$|
+|Velocity at perihelion|m/s|$\sqrt{G(pM+M)(2/d-1/a)}$|
+|Distance at aphelion|AU|$a(1+e)$|
+|Velocity at aphelion|m/s|$\sqrt{G(pM+M)(2/d-1/a)}$|
+|Position at any time|dict|Too long...|
+  
 ##
 This tool is written in **Python 3**, **Qt** and uses **SQLite**.
 Associated plug-in (no require) : **Autodesk Maya 2022+**
