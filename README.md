@@ -39,33 +39,30 @@ From some data, **Orbit** calculates additional data to refine the representatio
 
 To create an object in orbit, you will need :
 
-|*Physical characteristics* |Unit|Info|
+|*Physical and orbital characteristics* |Unit|Info|
 |-|:-:|-|
 |**Name**|str|For ease, avoid starting with a number, or add `_` in front of|
 |**Mass**|kg| Needed to calculate rotation speed|
-|**Inclination**|°| Difficult to find, especially for asteroids. It is not an essential element. Value can be 0|
-
-|*Orbital characteristics*|Unit|Info|
-|-|:-:|-|
+|**Inclination**|deg| Difficult to find, especially for asteroids. It is not an essential element. Value can be 0|
 |**Semi major axis**|AU||
 |**Eccentricity**|||
-|**Inclination**|°||
-|**Longitude of the ascending node**|°||
-|**Argument of periapsis**|°||
-|**Random day of perihelion**|yyyy,MM,dd|By default, it is J2000|
+|**Inclination**|deg||
+|**Longitude of the ascending node**|deg||
+|**Argument of periapsis**|deg||
+|**Random day of perihelion**|yyyy,MM,dd|By default, it is J2000                                               |
 
 
 From the data, **Orbit** calculates additional data to refine the creation of orbits.
 |*Result*|Unit|Math|
 |-|:-:|-|
-|Semi minor axis|AU|$a\sqrt{1-{e}^2}$|
-|Orbital period|days|$2&#960\sqrt{{a}^3/MG}$|
-|Circumference|m|$2&#960(aAU)$|
-|Distance at perihelion|AU|$a(1-e)$|
-|Velocity at perihelion|m/s|$\sqrt{G(pM+M)(2/d-1/a)}$|
-|Distance at aphelion|AU|$a(1+e)$|
-|Velocity at aphelion|m/s|$\sqrt{G(pM+M)(2/d-1/a)}$|
-|Position at any time|dict|Too long...|
+|**Semi minor axis**|AU|$a\sqrt{1-{e}^2}$|
+|**Orbital period**|earth days|$2&#960\sqrt{{a}^3/MG}$|
+|**Circumference**|m|$2&#960(aAU)$|
+|**Distance at perihelion**|AU|$a(1-e)$|
+|**Velocity at perihelion**|m/s|$\sqrt{G(pM+M)(2/d-1/a)}$|
+|**Distance at aphelion**|AU|$a(1+e)$|
+|**Velocity at aphelion**|m/s|$\sqrt{G(pM+M)(2/d-1/a)}$|
+|**Position at any time**|dict|Too long...|
   
 ##
 This tool is written in **Python 3**, **Qt** and uses **SQLite**.
