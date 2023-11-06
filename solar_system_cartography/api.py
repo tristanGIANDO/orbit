@@ -8,6 +8,8 @@ except:
     STANDALONE = True
 
 class Api():
+    """This class initializes the database and allows it to be edited
+    """
     def __init__(self, project_path:str) -> None:
         self._db = Database(project_path)
         self._project_path = project_path
@@ -46,6 +48,12 @@ class Api():
             self.add_element(elem, rebuild)
 
     def add_element(self, elem:list, rebuild:bool=True) ->None:
+        """Adds an element to the database. If ran in Maya, will create a 3D visualisation.
+
+        Args:
+            elem (list): the physical and orbital characteristics
+            rebuild (bool, optional): Rebuilds the existing 3D orbit. Defaults to True.
+        """
         if elem[1] == envs.T_STAR: #type
             obj = Star(elem[0], elem[3], elem[2], self._children)
         else:
@@ -81,18 +89,37 @@ class Api():
             rig.build()
 
     def open_file(self, path:str) ->None:
+        """If not standalone, opens a specified file
+
+        Args:
+            path (str): Path of the file (should be .ma)
+        """
         self._file.open_file(path)
 
     def new_file(self) ->None:
+        """If not standalone, inits a new maya file
+        """ 
         self._file.new_file()
 
     def close(self) ->None:
+        """Closes the database.
+        """
         self._db.close()
 
     def read(self) ->list:
+        """Gets all the content from the database.
+
+        Returns:
+            list: The elements
+        """
         return self._db.read()
     
     def delete_element(self, name:str) ->None:
+        """Deletes an element from its name, then reloads all
+
+        Args:
+            name (str): The name of the element to delete.
+        """
         self._db.delete_object(name)
         self.reload()
         self.build_all(rebuild=False)

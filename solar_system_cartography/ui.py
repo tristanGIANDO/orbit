@@ -66,7 +66,7 @@ class MainUI(QtWidgets.QMainWindow):
         super(MainUI, self).__init__(parent)
 
         self._title = "ORBIT"
-        self._version = "dev"
+        self._version = "1.0"
         self._builder = None
         self.setWindowTitle(f"{self._title} v-{self._version}")
         self.setWindowIcon(ICONS.get("logo"))

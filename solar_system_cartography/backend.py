@@ -1,55 +1,31 @@
 import math
 from solar_system_cartography import envs, utils
 
-class Star():
-    def __init__(self, name:str, mass:str, parent:str=envs.ORIGIN, children:list=[]) -> None:
-        self._name = name
-        self._mass = mass
-        self._type = "Star"
-        self._parent = parent
-        self._children = children
-
-    def get_name(self) ->str:
-        return self._name
-    
-    def get_parent(self) ->str:
-        return self._parent
-    
-    def get_type(self) ->str:
-        return self._type
-    
-    def get_mass(self) ->float:
-        return self._mass
-    
-    def get_influences(self) ->list:
-        influences = []
-        for child in self._children:
-            mass = child[3]
-            influence = self.get_object_influence(mass)
-            influences.append(influence)
-        barycenter_influence = 1 - sum(influences)
-        influences.insert(0, barycenter_influence)
-
-        return influences
-    
-    def get_object_influence(self, object_mass) ->float:
-        return float(object_mass) / float(self._mass) * 100
-    
-    def read(self) ->dict:
-        return {
-            envs.E_NAME : self.get_name(),
-            envs.E_TYPE : self.get_type(),
-            envs.E_PARENT : self.get_parent(),
-            envs.E_MASS : self.get_mass()
-        }
-
 class ObjectInOrbit():
+    """This class initializes an object in orbit. From specified data, does the calculation
+        and returns all the needed data about the orbit.
+
+        Args:
+            object_name (str): The name of the object
+            object_type (str): The type (planet, asteroid...)
+            object_parent (str): The parent of the object. If it's the barycenter (or a star), write "Origin"
+            object_mass (float): the mass of the object in kg
+            rotation_period (float): the rotation period of the object in terrestrian days
+            axis_inclination (float): the inclination of the axis
+            semi_major_axis (float): the semi major axis of the orbit in AU
+            inclination (float): the orbital inclination in deg
+            eccentricity (float): the orbital eccentricity
+            ascending_node (float): the longitude of the ascending node in deg
+            arg_periapsis (float): the argument of periapsis in deg
+            random_perihelion_day (list[int]): a random perihelion or perigee day
+            parent_mass (float): the mass of the parent
+        """
     def __init__(self, object_name:str, object_type:str, object_parent:str,
                 object_mass:float, rotation_period:float, axis_inclination:float,
                 semi_major_axis:float, inclination:float, eccentricity:float,
                 ascending_node:float, arg_periapsis:float, 
                 random_perihelion_day:list[int], parent_mass:float,) -> None:
-        
+
         if not object_name:
             raise RuntimeError("What is the name of the object ? Specify 'object_name'")
         if not object_mass:
@@ -108,6 +84,11 @@ class ObjectInOrbit():
             """
     
     def read(self) ->dict:
+        """Gets all the data about the object
+
+        Returns:
+            dict: the data
+        """
         return {
             envs.E_NAME : self.get_name(),
             envs.E_TYPE : self.get_type(),
@@ -131,47 +112,109 @@ class ObjectInOrbit():
         }
     
     def get_name(self) ->str:
+        """Gets the name of the object
+
+        Returns:
+            str: the name
+        """
         return self._name
     
     def get_type(self) ->str:
+        """Gets the type of the object
+
+        Returns:
+            str: the type
+        """   
         return self._type
     
     def get_parent(self) ->str:
+        """Gets the parent of the object. If barycenter, returns "Origin".
+
+        Returns:
+            str: the parent
+        """
         return self._parent
 
     def get_semi_major_axis(self) ->float:
+        """Gets the semi major axis of the orbit
+
+        Returns:
+            float: a
+        """
         return self._semi_major_axis
     
     def get_inclination(self) ->float:
+        """Gets the orbital inclination
+
+        Returns:
+            float: i
+        """
         return self._inclination
     
     def get_eccentricity(self) ->float:
+        """Gets the orbital eccentricity
+
+        Returns:
+            float: e
+        """
         return self._eccentricity
     
     def get_axis_inclination(self) ->float:
+        """Gets the axis inclination of the object
+
+        Returns:
+            float: axis
+        """
         return self._axis_inclination
     
     def get_rotation_period(self) ->float:
-        return self._rotation_period
+        """Gets the rotation period of the object
 
-    def get_radius(self) ->float:
-        return self._radius
+        Returns:
+            float: rotation period in days
+        """
+        return self._rotation_period
     
     def get_mass(self) ->float:
+        """Gets the mass of the object
+
+        Returns:
+            float: the mass in kg
+        """
         return self._mass
     
     def get_orbital_period(self) ->float:
+        """Gets the orbital period
+
+        Returns:
+            float: the orbital period in days
+        """
         return self._orbital_period
     
     def get_random_perihelion_day(self) ->list:
+        """Gets a perihelion day
+
+        Returns:
+            float: the day
+        """
         if not isinstance(self._perihelion_day, list):
             return eval(self._perihelion_day)
         return self._perihelion_day
     
     def get_arg_periapsis(self) ->float:
+        """Gets the argument of periapsis
+
+        Returns:
+            float: in deg
+        """
         return self._arg_periapsis
     
     def get_ascending_node(self) ->float:
+        """Gets the longitude of the ascending node
+
+        Returns:
+            float: in deg
+        """
         return self._ascending_node
     
     def set_orbital_period(self) ->float:
@@ -186,6 +229,11 @@ class ObjectInOrbit():
         return orbital_period / 86400
 
     def get_semi_minor_axis(self) ->float:
+        """Gets the semi minor axis
+
+        Returns:
+            float: axis
+        """
         return self._semi_minor_axis
     
     def set_semi_minor_axis(self) ->float:
@@ -358,6 +406,48 @@ class ObjectInOrbit():
             data[days + time*365] = value
         
         return data
+    
+class Star():
+    def __init__(self, name:str, mass:str, parent:str=envs.ORIGIN, children:list=[]) -> None:
+        self._name = name
+        self._mass = mass
+        self._type = "Star"
+        self._parent = parent
+        self._children = children
+
+    def get_name(self) ->str:
+        return self._name
+    
+    def get_parent(self) ->str:
+        return self._parent
+    
+    def get_type(self) ->str:
+        return self._type
+    
+    def get_mass(self) ->float:
+        return self._mass
+    
+    def get_influences(self) ->list:
+        influences = []
+        for child in self._children:
+            mass = child[3]
+            influence = self.get_object_influence(mass)
+            influences.append(influence)
+        barycenter_influence = 1 - sum(influences)
+        influences.insert(0, barycenter_influence)
+
+        return influences
+    
+    def get_object_influence(self, object_mass) ->float:
+        return float(object_mass) / float(self._mass) * 100
+    
+    def read(self) ->dict:
+        return {
+            envs.E_NAME : self.get_name(),
+            envs.E_TYPE : self.get_type(),
+            envs.E_PARENT : self.get_parent(),
+            envs.E_MASS : self.get_mass()
+        }
     
 if __name__ == "__main__":
     pass
