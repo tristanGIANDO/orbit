@@ -100,10 +100,22 @@ flowchart TD
     E{ui} -- calls --> A
 ```
 
-## INSTRUCTIONS FOR USE
+### Init project
 ```py
 from solar_system_cartography.api import Api
 
+project_path = r"path\to\a\directory"
+
+api = Api(project_path)
+```
+
+### Get elements
+```py
+elements = api.read()
+```
+
+### Add element
+```py
 new_object = [
             # name,
             # type,
@@ -119,8 +131,12 @@ new_object = [
             # random perihelion / perigee date
         ]
 
-project_path = r"path\to\a\directory"
-
-api = Api(project_path)
 api.add_element(new_object)
+```
+
+### Delete element
+```py
+object_name = "Example"
+
+api.delete_element(object_name)
 ```
