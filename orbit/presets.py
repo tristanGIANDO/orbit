@@ -1,4 +1,4 @@
-from solar_system_cartography import envs
+from orbit import envs
 PRESETS = [
     [
         "Mercury",

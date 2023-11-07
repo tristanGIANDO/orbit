@@ -1,7 +1,7 @@
 from maya import cmds
 import math
-from solar_system_cartography.backend import ObjectInOrbit
-from solar_system_cartography import envs
+from orbit.backend import ObjectInOrbit
+from orbit import envs
 
 class File():
     def __init__(self) -> None:

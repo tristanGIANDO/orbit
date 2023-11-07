@@ -12,7 +12,7 @@ def reload_module(module, verbose=False):
             print('reload %s'%mod)
 
 if __name__ == "__main__":
-    reload_module("solar_system_cartography")
-    from solar_system_cartography.ui import run_ui
+    reload_module("orbit")
+    from orbit.ui import run_ui
     
     run_ui()

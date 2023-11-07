@@ -19,7 +19,7 @@
 *SOFTWARE.*
 
 <h2 align="center" style="margin:1em;">
-    <img src="solar_system_cartography\icons\title_dark.png"
+    <img src="orbit\icons\title_dark.png"
          alt="orbit"></a>
 </h2>
 
@@ -99,7 +99,7 @@ flowchart TD
 
 ### Init project
 ```py
-from solar_system_cartography.api import Api
+from orbit.api import Api
 
 project_path = r"path\to\a\directory"
 

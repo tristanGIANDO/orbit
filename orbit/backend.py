@@ -1,5 +1,5 @@
 import math
-from solar_system_cartography import envs, utils
+from orbit import envs, utils
 
 class ObjectInOrbit():
     """This class initializes an object in orbit. From specified data, does the calculation

@@ -1,8 +1,8 @@
-from solar_system_cartography.database import Database
-from solar_system_cartography.backend import ObjectInOrbit, Star
-from solar_system_cartography import envs
+from orbit.database import Database
+from orbit.backend import ObjectInOrbit, Star
+from orbit import envs
 try:
-    from solar_system_cartography.rig import Rig, File
+    from orbit.rig import Rig, File
     STANDALONE = False
 except:
     STANDALONE = True

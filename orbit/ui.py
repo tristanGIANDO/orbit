@@ -1,9 +1,9 @@
 import os, sys, webbrowser
 from functools import partial
-from solar_system_cartography.Qt import QtWidgets, QtGui, QtCore
-from solar_system_cartography import envs
-from solar_system_cartography.presets import PRESETS
-from solar_system_cartography.api import Api
+from orbit.Qt import QtWidgets, QtGui, QtCore
+from orbit import envs
+from orbit.presets import PRESETS
+from orbit.api import Api
 
 try:
     from maya import OpenMayaUI as omui

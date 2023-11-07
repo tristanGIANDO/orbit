@@ -1,5 +1,5 @@
 import os, sqlite3
-from solar_system_cartography import envs
+from orbit import envs
 
 class Database():
     def __init__(self, project_path:str) -> None:
