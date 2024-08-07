@@ -37,6 +37,8 @@
 **Orbit** is an application that creates a 3D representation of objects in orbit.
 From some data, **Orbit** calculates additional data to refine the representation or help the research.
 
+[![LinkedIn](https://img.shields.io/badge/LinkedIn_Demo-%230077B5.svg?logo=linkedin&logoColor=white)](https://www.linkedin.com/posts/tristan-giandoriggio_python-sql-orbit-activity-7127721159759949824-bAER?utm_source=share&utm_medium=member_desktop)
+
 To create an object in orbit, you will need :
 
 |*Physical and orbital characteristics* |Unit|Info|
