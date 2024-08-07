@@ -53,6 +53,11 @@ To create an object in orbit, you will need :
 |**Argument of periapsis**|deg||
 |**Random day of perihelion**|yyyy,MM,dd|By default, it is J2000                                               |
 
+One source I've used a lot is Wikipedia: https://fr.m.wikipedia.org/wiki/Liste_d%27objets_du_Syst%C3%A8me_solaire
+
+Beware though, it's not always correct or accurate.
+
+---
 
 From the data, **Orbit** calculates additional data to refine the creation of orbits.
 |*Result*|Unit|Math|
@@ -66,15 +71,27 @@ From the data, **Orbit** calculates additional data to refine the creation of or
 |**Velocity at aphelion**|m/s|$\sqrt{G(pM+M)(2/d-1/a)}$|
 |**Position at any time**|dict|Too long...|
   
-##
-This tool is written in **Python 3**, **Qt** and uses **SQLite**.
-Associated plug-in (no require) : **Autodesk Maya 2022+**
-
 # INSTALL
-Simply run the file `launcher.exe` ( or `launcher.py` if you want to open it from an IDE ).
+* This tool is written in **Python 3**, **Qt** and uses **SQLite**.
+Associated plug-in (not essential) : **Autodesk Maya 2022+**
 
-### USAGE
-Once you have opened the interface, you need to determine a location where the project can be saved.
+* The tool implements `Qt.py` developed by Motosso and available here: https://github.com/mottosso/Qt.py It allows you to use any version of Qt. This is why the tool works both in standalone and in Maya.
+
+---
+
+From a terminal, run `pip3 install PyQt5` (or any Qt equivalent).
+
+# USAGE
+
+Run the file `launcher.py` from an IDE or Autodesk Maya or this code :
+
+```py
+from orbit.ui import run_ui
+
+run_ui()
+```
+
+Once you have opened the UI, you need to determine a location where the project can be saved.
 Click on the `set_project` button and select a folder.
 A database is automatically created and this is where your data will be stored.
 
@@ -84,6 +101,9 @@ If you are in standalone mode, the object you create will be added to the databa
 
 If this is not the case, don't panic, every time you open a project, Maya will read all the contents of the database and create anything that doesn't exist.
 So there's never any need to save your scenes - everything is done automatically, just set up a project!
+
+![](https://github.com/tristanGIANDO/orbit/blob/main/orbit/icons/orbit_01.png?raw=true)
+![](https://github.com/tristanGIANDO/orbit/blob/main/orbit/icons/orbit_02.png?raw=true)
 
 # API DOCUMENTATION
 
@@ -139,3 +159,5 @@ object_name = "Example"
 
 api.delete_element(object_name)
 ```
+
+Made with ❤️
